@@ -136,4 +136,3 @@ def render():
                     st.success(f"Added {scan_player} to your collection!")
 
 
-render()

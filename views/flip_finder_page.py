@@ -107,4 +107,3 @@ Higher = less risk the "flip" is actually a mismatch.
         st.warning("Select at least one sport to scan.")
 
 
-render()

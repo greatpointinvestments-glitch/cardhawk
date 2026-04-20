@@ -210,4 +210,3 @@ def render(demo_mode: bool = False):
             st.info("No listings found for this player.")
 
 
-render(demo_mode=False)

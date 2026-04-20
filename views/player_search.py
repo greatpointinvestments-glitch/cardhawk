@@ -379,4 +379,3 @@ def _render_sports_results(player_query: str, sport: str, demo_mode: bool):
         st.info("No sold data available for this player.")
 
 
-render(demo_mode=False)

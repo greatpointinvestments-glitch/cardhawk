@@ -72,4 +72,3 @@ def render():
             st.info("No price history available for this player.")
 
 
-render()

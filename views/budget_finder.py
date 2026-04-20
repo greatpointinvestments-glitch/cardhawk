@@ -84,4 +84,3 @@ def render(demo_mode: bool = False):
     gradient_divider()
 
 
-render(demo_mode=False)

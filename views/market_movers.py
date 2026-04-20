@@ -88,4 +88,3 @@ def render():
             render_table(rows)
 
 
-render()

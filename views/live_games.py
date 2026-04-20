@@ -116,4 +116,3 @@ def render():
         st.info("Add cards to your portfolio or use the watchlist to track players during games.")
 
 
-render()

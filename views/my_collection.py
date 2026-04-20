@@ -426,4 +426,3 @@ def render(current_user: str | None):
         st.caption(f"- {suggestion}")
 
 
-render(st.session_state.get("username"))

@@ -333,4 +333,3 @@ def render(current_user: str | None):
     st.caption(f"{total_players} players tracked across all sports — and growing every week")
 
 
-render(st.session_state.get("username"))
