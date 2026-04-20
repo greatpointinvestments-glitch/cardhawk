@@ -95,7 +95,7 @@ def render(demo_mode: bool = False):
 
     if selected_legend:
         legend = next(p for p in legends if p["name"] == selected_legend)
-        source = next(p for p in LEGENDS_WATCHLIST if p["name"] == selected_legend)
+        source = next(p for p in LEGENDS_WATCHLIST + POKEMON_LEGENDS_WATCHLIST if p["name"] == selected_legend)
 
         st.markdown(f"#### {selected_legend}")
 
