@@ -9,5 +9,9 @@ font = "sans serif"
 headless = true
 maxUploadSize = 5
 
+[client]
+showSidebarNavigation = false
+defaultSidebarState = "expanded"
+
 [browser]
 gatherUsageStats = false
