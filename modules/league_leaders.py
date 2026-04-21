@@ -1,10 +1,11 @@
 """League leaders data — NBA, NFL, MLB stat leaders from free public APIs.
 
 NBA: nba_api library (LeagueLeaders endpoint)
-NFL: ESPN public API (site.api.espn.com)
+NFL: ESPN Core API (sports.core.api.espn.com) with concurrent athlete resolution
 MLB: MLB Stats API (statsapi.mlb.com)
 """
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 import requests
@@ -86,7 +87,7 @@ SPORT_CATEGORIES = {
 # --- NBA Leaders (nba_api) ---
 
 @st.cache_data(ttl=86400, show_spinner=False)
-def fetch_nba_leaders(stat_category: str = "PTS", season: str = "", limit: int = 50) -> list[dict]:
+def fetch_nba_leaders(stat_category: str = "PTS", season: str = "", limit: int = 20) -> list[dict]:
     """Fetch NBA league leaders using nba_api. Returns list of dicts."""
     try:
         from nba_api.stats.endpoints import LeagueLeaders
@@ -122,37 +123,85 @@ def fetch_nba_leaders(stat_category: str = "PTS", season: str = "", limit: int =
         return []
 
 
-# --- NFL Leaders (ESPN public API) ---
+# --- NFL Leaders (ESPN Core API) ---
+
+def _resolve_athlete(ref_url: str) -> dict:
+    """Resolve an ESPN athlete $ref URL to {name, team, position}."""
+    try:
+        resp = requests.get(ref_url, timeout=8)
+        data = resp.json()
+        # Team is also a $ref — resolve it
+        team_ref = data.get("team", {}).get("$ref", "")
+        team_abbr = ""
+        if team_ref:
+            try:
+                t = requests.get(team_ref, timeout=5).json()
+                team_abbr = t.get("abbreviation", "")
+            except Exception:
+                pass
+        return {
+            "name": data.get("displayName", "Unknown"),
+            "team": team_abbr,
+        }
+    except Exception:
+        return {"name": "Unknown", "team": ""}
+
 
 @st.cache_data(ttl=86400, show_spinner=False)
-def fetch_nfl_leaders(season: int = 0, limit: int = 50) -> dict[str, list[dict]]:
-    """Fetch NFL leaders from ESPN public API. Returns dict of category -> list."""
+def fetch_nfl_leaders(season: int = 0, limit: int = 20) -> dict[str, list[dict]]:
+    """Fetch NFL leaders from ESPN Core API. Returns dict of category -> list.
+    Uses concurrent requests to resolve athlete $ref links."""
     try:
         if not season:
             season = get_nfl_display_season()[0]
-        url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/leaders?season={season}"
+        url = (
+            f"https://sports.core.api.espn.com/v2/sports/football/"
+            f"leagues/nfl/seasons/{season}/types/2/leaders"
+        )
         resp = requests.get(url, timeout=15)
         resp.raise_for_status()
         data = resp.json()
 
-        results = {}
-        for cat in data.get("leaders", []):
+        # Target categories we care about
+        target_cats = set(NFL_CATEGORIES.values())
+
+        # Collect all athlete refs we need to resolve
+        all_refs = set()
+        cat_raw = {}  # category_name -> [(value, ref_url), ...]
+        for cat in data.get("categories", []):
             cat_name = cat.get("name", "")
-            leaders_list = []
-            for i, leader in enumerate(cat.get("leaders", [])[:limit]):
-                athlete = leader.get("athlete", {})
-                name = athlete.get("displayName", "Unknown")
-                team_info = athlete.get("team", {})
-                team = team_info.get("abbreviation", "") if isinstance(team_info, dict) else ""
+            if cat_name not in target_cats:
+                continue
+            entries = []
+            for leader in cat.get("leaders", [])[:limit]:
+                ref = leader.get("athlete", {}).get("$ref", "")
                 value = leader.get("displayValue", leader.get("value", ""))
+                entries.append((value, ref))
+                if ref:
+                    all_refs.add(ref)
+            cat_raw[cat_name] = entries
+
+        # Batch-resolve all athlete refs concurrently
+        ref_map = {}
+        refs_list = list(all_refs)
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            resolved = list(executor.map(_resolve_athlete, refs_list))
+        for ref_url, athlete_data in zip(refs_list, resolved):
+            ref_map[ref_url] = athlete_data
+
+        # Build final results
+        results = {}
+        for cat_name, entries in cat_raw.items():
+            leaders_list = []
+            for i, (value, ref) in enumerate(entries):
+                athlete = ref_map.get(ref, {"name": "Unknown", "team": ""})
                 leaders_list.append({
                     "rank": i + 1,
-                    "player": name,
-                    "team": team,
+                    "player": athlete["name"],
+                    "team": athlete["team"],
                     "value": value,
                 })
-            if cat_name:
-                results[cat_name] = leaders_list
+            results[cat_name] = leaders_list
         return results
     except Exception:
         return {}
@@ -161,7 +210,7 @@ def fetch_nfl_leaders(season: int = 0, limit: int = 50) -> dict[str, list[dict]]
 # --- MLB Leaders (MLB Stats API) ---
 
 @st.cache_data(ttl=86400, show_spinner=False)
-def fetch_mlb_leaders(season: int = 0, limit: int = 50) -> dict[str, list[dict]]:
+def fetch_mlb_leaders(season: int = 0, limit: int = 20) -> dict[str, list[dict]]:
     """Fetch MLB leaders from MLB Stats API. Returns dict keyed by 'category|statGroup'."""
     try:
         if not season:
@@ -200,7 +249,7 @@ def fetch_mlb_leaders(season: int = 0, limit: int = 50) -> dict[str, list[dict]]
 
 # --- Unified entry point ---
 
-def get_leaders(sport: str, category_display: str, limit: int = 50) -> list[dict]:
+def get_leaders(sport: str, category_display: str, limit: int = 20) -> list[dict]:
     """Unified entry point. Returns list of {rank, player, team, value}."""
     cats = SPORT_CATEGORIES.get(sport, {})
     api_key = cats.get(category_display, "")

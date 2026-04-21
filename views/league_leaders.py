@@ -33,11 +33,11 @@ def render():
 
     # --- Tier limits ---
     _is_pro = is_pro()
-    row_limit = 50 if _is_pro else 10
+    row_limit = 20 if _is_pro else 5
 
     # --- Fetch data ---
     with st.spinner("Loading leaders..."):
-        leaders = get_leaders(sport, category, limit=50)
+        leaders = get_leaders(sport, category, limit=20)
 
     if not leaders:
         st.warning(f"No {sport} leader data available right now. Try again later.")
@@ -87,4 +87,4 @@ def render():
             t4.write(row["value"])
             t5.write("---")
         st.markdown('</div>', unsafe_allow_html=True)
-        render_teaser_gate("League Leaders", "Unlock the full top 50 with Pro")
+        render_teaser_gate("League Leaders", "Unlock the full top 20 with Pro")
