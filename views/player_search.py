@@ -252,8 +252,8 @@ def _render_sports_results(player_query: str, sport: str, demo_mode: bool):
     st.markdown("#### eBay Card Listings")
 
     _SORT_LABELS = {
-        "price": "Price: Low to High",
         "bestMatch": "Best Match",
+        "price": "Price: Low to High",
         "-price": "Price: High to Low",
         "newlyListed": "Newest",
         "endingSoonest": "Auction: Ending Soonest",
