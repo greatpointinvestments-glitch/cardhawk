@@ -3,6 +3,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 
+from urllib.parse import quote_plus
 from modules.ui_helpers import gradient_divider, score_progress_bar, supplies_button
 from modules.affiliates import supplies_affiliate_url, SUPPLIES_LINKS
 from modules.portfolio import add_card, remove_card, get_portfolio, bulk_import_cards
@@ -331,7 +332,7 @@ def render(current_user: str | None):
         spark_prices = [h["price"] for h in card_history[-14:]]
         spark_svg = build_sparkline(spark_prices)
 
-        pc0, pc1, pc2, pc3, pc4, pc5, pc6, pc7 = st.columns([2.5, 0.8, 1, 1, 1, 1, 0.8, 0.5])
+        pc0, pc1, pc2, pc3, pc4, pc5, pc6, pc7, pc8 = st.columns([2.5, 0.8, 1, 1, 1, 1, 0.8, 0.7, 0.4])
         with pc0:
             st.write(f"**{card['player_name']}** ({card['card_type']}) • {card['sport']}")
         with pc1:
@@ -350,6 +351,19 @@ def render(current_user: str | None):
         with pc6:
             st.caption(card.get("purchase_date", ""))
         with pc7:
+            sell_title_parts = [card["player_name"]]
+            if card.get("year"):
+                sell_title_parts.append(card["year"])
+            if card.get("set_name"):
+                sell_title_parts.append(card["set_name"])
+            if card.get("card_type") and card["card_type"] != "Any":
+                sell_title_parts.append(card["card_type"])
+            sell_title_parts.append(card["sport"])
+            sell_title_parts.append("Card")
+            sell_query = quote_plus(" ".join(sell_title_parts))
+            sell_url = f"https://www.ebay.com/sell/create?title={sell_query}"
+            st.markdown(f'<a href="{sell_url}" target="_blank" class="ebay-btn" style="font-size:0.75em;padding:3px 10px;">Sell</a>', unsafe_allow_html=True)
+        with pc8:
             if st.button("X", key=f"rm_pf_{card['id']}"):
                 remove_card(card["id"])
                 st.session_state.portfolio_values.pop(card["id"], None)
