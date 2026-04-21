@@ -99,8 +99,10 @@ def render():
 
                     scan_submit = st.form_submit_button("Add to Collection", use_container_width=True)
 
-                if scan_submit and scan_player and scan_price > 0:
-                    # Enforce portfolio card limit for free users
+                if scan_submit and not scan_player:
+                    st.warning("Player name is required to add to collection.")
+
+                if scan_submit and scan_player:
                     from tiers import is_pro
                     if not is_pro():
                         from config.settings import FREE_TIER_LIMITS
