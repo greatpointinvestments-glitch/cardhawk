@@ -154,6 +154,60 @@ def render(current_user: str | None):
             for ta in triggered[:3]:
                 st.toast(f"🔔 {ta['player_name']} hit your ${ta['threshold_price']:.2f} {ta['alert_type']} alert!")
 
+    # --- Daily Drop Teaser ---
+    from modules.daily_drop import get_daily_card, get_user_vote, cast_vote, get_community_split, compute_user_streak
+    drop = get_daily_card()
+    if drop:
+        drop_date = drop["drop_date"]
+        drop_buy_url = ebay_search_affiliate_url(drop["player_name"], drop["sport"])
+        drop_listing_url = drop.get("listing", {}).get("url", "")
+        drop_link = affiliate_url(drop_listing_url) if drop_listing_url else drop_buy_url
+        st.markdown(
+            f'<div style="background:linear-gradient(135deg,#7c2d12,#dc2626);border-radius:12px;'
+            f'padding:16px 20px;margin:10px 0;">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center;">'
+            f'<div>'
+            f'<strong style="font-size:1.1em;">Daily Drop</strong> &nbsp;'
+            f'<span style="color:#fbbf24;font-size:0.9em;">{drop["player_name"]} ({drop["sport"]})</span><br>'
+            f'<span style="color:#d1d5db;font-size:0.9em;">${drop["drop_price"]:.2f}</span> &nbsp;'
+            f'<a href="{drop_link}" target="_blank" class="ebay-btn" '
+            f'style="font-size:0.75em;padding:2px 10px;">Buy on eBay</a>'
+            f'</div>'
+            f'<div style="font-size:0.85em;color:#fbbf24;">BUY or PASS?</div>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
+        if current_user:
+            existing_vote = get_user_vote(current_user, drop_date)
+            if existing_vote:
+                split = get_community_split(drop_date)
+                streak = compute_user_streak(current_user)
+                streak_text = f' &bull; {streak["current_streak"]} streak' if streak["current_streak"] > 0 else ""
+                st.markdown(
+                    f'<div style="text-align:center;padding:4px;">'
+                    f'<span style="color:#9ca3af;">You voted <strong>{existing_vote}</strong> &bull; '
+                    f'{split["buy_pct"]}% say BUY{streak_text}</span></div>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                dd1, dd2, dd3 = st.columns([1, 1, 1])
+                with dd1:
+                    if st.button("BUY", key="home_drop_buy", type="primary"):
+                        cast_vote(current_user, drop_date, "BUY")
+                        st.rerun()
+                with dd2:
+                    if st.button("PASS", key="home_drop_pass"):
+                        cast_vote(current_user, drop_date, "PASS")
+                        st.rerun()
+                with dd3:
+                    if st.button("See Full Drop", key="home_drop_nav"):
+                        st.session_state.nav_target = "🎯 Daily Drop"
+                        st.rerun()
+        else:
+            if st.button("Vote Now — Sign Up Free", key="home_drop_signup"):
+                st.session_state.auth_tab = "Sign Up"
+                st.rerun()
+
     # --- Card of the Day ---
     with st.spinner("Loading Card of the Day..."):
         cotd = get_card_of_the_day()
@@ -193,6 +247,10 @@ def render(current_user: str | None):
     # --- Feature cards ---
     # (title, css_class, button_label, button_key, nav_target, description, is_pro_feature)
     _FEATURE_CARDS = [
+        ("🎯 Daily Drop", "feature-card-drop", "Vote Now", "home_drop", "🎯 Daily Drop",
+         "BUY or PASS? Vote daily, build streaks, climb the leaderboard", False),
+        ("🎰 Pack Simulator", "feature-card-packs", "Rip Packs", "home_packs", "🎰 Pack Simulator",
+         "Rip virtual packs with real prices. Can you beat the odds?", False),
         ("🔍 Player Search", "feature-card-search", "Search Players", "home_search", "🔍 Player Search",
          "Look up any player — see their stats, card prices, and deals", False),
         ("🚀 Breakout Leaderboard", "feature-card-breakout", "View Breakouts", "home_breakout", "🚀 Breakout Leaderboard",
@@ -207,10 +265,12 @@ def render(current_user: str | None):
          "Wemby or Chet? Side-by-side investment verdict.", True),
         ("📁 My Collection", "feature-card-portfolio", "Open Collection", "home_portfolio", "📁 My Collection",
          "Know exactly what your collection is worth right now", False),
+        ("💪 Collection Battles", "feature-card-battles", "Battle Now", "home_battles", "💪 Collection Battles",
+         "Challenge a friend. 5 categories. 100 points. Who wins?", False),
         ("📐 Grading Calculator", "feature-card-grading", "Calculate ROI", "home_grading", "📐 Grading Calculator",
          "Should you send it to PSA? Find out before you spend.", True),
         ("🏟️ Live Games", "feature-card-games", "Track Games", "home_games", "🏟️ Live Games",
-         "Your players in action — live scores, watch links, card impact", False),
+         "Your players in action — live scores, alerts when they go off", False),
         ("📷 Card Scanner", "feature-card-scanner", "Scan a Card", "home_scanner", "📷 Card Scanner",
          "Snap a photo — AI identifies your card instantly", False),
         ("📊 Price History", "feature-card-history", "View History", "home_history", "📊 Price History",

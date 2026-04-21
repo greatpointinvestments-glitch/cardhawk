@@ -1,16 +1,19 @@
-"""Live Games page."""
+"""Live Games page — enhanced with Game Night Mode alerts."""
 
 import streamlit as st
 
 from modules.ui_helpers import gradient_divider, ebay_button
 from modules.portfolio import get_portfolio
 from modules.live_games import get_todays_games, match_players_to_games, build_watch_links, get_game_card_impact
+from modules.game_night import get_active_game_alerts, evaluate_game_score
+from modules.affiliates import ebay_search_affiliate_url
 from data.watchlists import NBA_BREAKOUT_WATCHLIST, NFL_BREAKOUT_WATCHLIST, MLB_BREAKOUT_WATCHLIST
+from tiers import is_pro
 
 
 def render():
     st.title("🏟️ Live Game Tracker")
-    st.caption("See which of your players are in action today — live scores, watch links, and card-market impact")
+    st.caption("See which of your players are in action today — live scores, alerts when they go off, and card impact")
 
     gf1, gf2, gf3 = st.columns([2, 2, 1])
     with gf1:
@@ -63,6 +66,40 @@ def render():
     sm3.metric("Games Final", games_final)
     sm4.metric("Games Upcoming", games_upcoming)
 
+    # --- Game Night Alerts ---
+    portfolio = get_portfolio() if game_source in ("My Portfolio", "Both") else []
+    if portfolio and all_games:
+        alerts = get_active_game_alerts(portfolio, all_games)
+        _user_is_pro = is_pro()
+        alert_limit = 3 if not _user_is_pro else len(alerts)
+
+        if alerts:
+            gradient_divider()
+            st.markdown("### Game Night Alerts")
+            for alert in alerts[:alert_limit]:
+                tier = alert["tier"]
+                css_class = f"game-night-{tier.lower()}"
+                impact = alert["impact_pct"]
+                winning = alert["winning_team"]
+
+                if tier == "MONSTER":
+                    icon = ""
+                    headline = f'{alert["player_name"]}\'s team ({winning}) is dominating — cards could spike +{impact}%!'
+                elif tier == "BIG":
+                    icon = ""
+                    headline = f'{alert["player_name"]}\'s team ({winning}) building a big lead — potential +{impact}% impact'
+                else:
+                    icon = ""
+                    headline = f'{alert["player_name"]}\'s team in a solid position — +{impact}% est. impact'
+
+                st.markdown(
+                    f'<div class="{css_class}">{icon} {headline}</div>',
+                    unsafe_allow_html=True,
+                )
+
+            if not _user_is_pro and len(alerts) > alert_limit:
+                st.caption(f"+{len(alerts) - alert_limit} more alerts — upgrade to Pro to see all")
+
     gradient_divider()
 
     if playing:
@@ -95,8 +132,10 @@ def render():
                 yt_url = links["youtube_highlights"]
                 dk_url = links["draftkings"]
                 gc_label = "MLB Gameday" if game.get("sport") == "MLB" else "ESPN"
+                buy_url = ebay_search_affiliate_url(m["player_name"], m.get("sport", ""))
                 st.markdown(
-                    f'<a href="{gc_url}" target="_blank" class="ebay-btn" style="margin-right:6px">{gc_label}</a>'
+                    f'<a href="{buy_url}" target="_blank" class="ebay-btn" style="margin-right:6px">Buy Cards</a>'
+                    f'<a href="{gc_url}" target="_blank" class="ebay-btn" style="background:linear-gradient(135deg,#1e40af,#3b82f6);margin-right:6px">{gc_label}</a>'
                     f'<a href="{yt_url}" target="_blank" class="ebay-btn" style="background:linear-gradient(135deg,#dc2626,#ef4444);margin-right:6px">Highlights</a>'
                     f'<a href="{dk_url}" target="_blank" class="ebay-btn" style="background:linear-gradient(135deg,#2d6b3f,#4ade80);margin-right:6px">DraftKings</a>',
                     unsafe_allow_html=True,
@@ -104,6 +143,17 @@ def render():
 
             if impact:
                 st.info(impact)
+
+            # Game Night: score-based badge
+            game_eval = evaluate_game_score(game)
+            if game_eval:
+                tier = game_eval["tier"]
+                css = f"game-night-{tier.lower()}"
+                st.markdown(
+                    f'<span class="{css}" style="font-size:0.85em;padding:4px 10px;">'
+                    f'{tier} game — est. +{game_eval["impact_pct"]}% card impact</span>',
+                    unsafe_allow_html=True,
+                )
 
             gradient_divider()
 

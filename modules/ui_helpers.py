@@ -124,27 +124,32 @@ def tcgplayer_button(url: str) -> str:
 
 def whatnot_button(url: str) -> str:
     """Return a styled Whatnot button."""
-    return f'<a href="{url}" target="_blank" class="whatnot-btn">Watch on Whatnot</a>'
+    aff_url = affiliate_url(url)
+    return f'<a href="{aff_url}" target="_blank" class="whatnot-btn">Watch on Whatnot</a>'
 
 
 def topps_button(url: str) -> str:
     """Return a styled Topps button."""
-    return f'<a href="{url}" target="_blank" class="topps-btn">Shop Topps</a>'
+    aff_url = affiliate_url(url)
+    return f'<a href="{aff_url}" target="_blank" class="topps-btn">Shop Topps</a>'
 
 
 def beckett_button(url: str) -> str:
     """Return a styled Beckett button."""
-    return f'<a href="{url}" target="_blank" class="beckett-btn">Price Guide</a>'
+    aff_url = affiliate_url(url)
+    return f'<a href="{aff_url}" target="_blank" class="beckett-btn">Price Guide</a>'
 
 
 def drip_shop_button(url: str) -> str:
     """Return a styled Drip Shop Live button."""
-    return f'<a href="{url}" target="_blank" class="drip-shop-btn">Watch Live</a>'
+    aff_url = affiliate_url(url)
+    return f'<a href="{aff_url}" target="_blank" class="drip-shop-btn">Watch Live</a>'
 
 
 def supplies_button(url: str, label: str = "Shop") -> str:
     """Return a styled green supplies button."""
-    return f'<a href="{url}" target="_blank" class="supplies-btn">{label}</a>'
+    aff_url = affiliate_url(url)
+    return f'<a href="{aff_url}" target="_blank" class="supplies-btn">{label}</a>'
 
 
 def marketplace_button(url: str, sport: str = "") -> str:
@@ -254,7 +259,8 @@ def render_sold_row(listing: dict):
     with sc0:
         st.markdown(card_thumbnail(listing.get("image_url", "")), unsafe_allow_html=True)
     with sc1:
-        st.markdown(f'<a href="{listing["url"]}" target="_blank">{listing["title"][:70]}</a>', unsafe_allow_html=True)
+        aff_sold_url = affiliate_url(listing["url"])
+        st.markdown(f'<a href="{aff_sold_url}" target="_blank">{listing["title"][:70]}</a>', unsafe_allow_html=True)
     with sc2:
         price = listing.get("sold_price", listing.get("total", 0))
         st.write(f"${price:.2f}")

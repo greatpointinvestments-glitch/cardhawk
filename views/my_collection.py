@@ -361,7 +361,9 @@ def render(current_user: str | None):
             sell_title_parts.append(card["sport"])
             sell_title_parts.append("Card")
             sell_query = quote_plus(" ".join(sell_title_parts))
-            sell_url = f"https://www.ebay.com/sell/create?title={sell_query}"
+            sell_url_raw = f"https://www.ebay.com/sell/create?title={sell_query}"
+            from modules.affiliates import affiliate_url as _aff_url
+            sell_url = _aff_url(sell_url_raw)
             st.markdown(f'<a href="{sell_url}" target="_blank" class="ebay-btn" style="font-size:0.75em;padding:3px 10px;">Sell</a>', unsafe_allow_html=True)
         with pc8:
             if st.button("X", key=f"rm_pf_{card['id']}"):

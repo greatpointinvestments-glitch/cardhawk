@@ -16,6 +16,7 @@ from views import (
     breakout_leaderboard, legend_cards, trade_checker, flip_finder_page,
     player_comparison, market_movers, price_alerts_page, my_collection,
     grading_calculator, budget_finder,
+    daily_drop, pack_simulator, collection_battles,
 )
 
 
@@ -373,6 +374,56 @@ st.markdown("""
         color: #f59e0b; font-weight: bold; font-size: 0.7em;
     }
 
+    /* --- Daily Drop --- */
+    .vote-buy {
+        display: inline-block; color: #fff; background: linear-gradient(135deg, #22c55e, #16a34a);
+        padding: 4px 14px; border-radius: 6px; font-weight: 900; font-size: 1.1em;
+    }
+    .vote-pass {
+        display: inline-block; color: #fff; background: linear-gradient(135deg, #ef4444, #dc2626);
+        padding: 4px 14px; border-radius: 6px; font-weight: 900; font-size: 1.1em;
+    }
+    .streak-badge {
+        display: inline-block; color: #f59e0b; font-weight: 900;
+        animation: pulse-fire 2s infinite;
+    }
+
+    /* --- Pack Simulator --- */
+    .pack-hit {
+        display: inline-block; color: #1f2937; background: linear-gradient(135deg, #f59e0b, #d97706);
+        padding: 1px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75em;
+        margin-left: 6px; vertical-align: middle;
+        animation: pulse-fire 2s infinite;
+    }
+    .feature-card-drop { background: linear-gradient(135deg, #7c2d12, #dc2626); }
+    .feature-card-packs { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+    .feature-card-battles { background: linear-gradient(135deg, #064e3b, #059669); }
+
+    /* --- Game Night --- */
+    .game-night-monster {
+        background: linear-gradient(135deg, #dc2626, #f59e0b); color: #fff;
+        padding: 12px 20px; border-radius: 10px; font-weight: bold; font-size: 1.05em;
+        margin: 8px 0; animation: pulse-fire 2s infinite;
+    }
+    .game-night-big {
+        background: linear-gradient(135deg, #f59e0b, #eab308); color: #1f2937;
+        padding: 12px 20px; border-radius: 10px; font-weight: bold; font-size: 1em;
+        margin: 8px 0;
+    }
+    .game-night-solid {
+        background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff;
+        padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.95em;
+        margin: 8px 0;
+    }
+
+    /* --- Collection Battles --- */
+    .battle-winner {
+        color: #22c55e; font-weight: 900; font-size: 1.2em;
+    }
+    .battle-loser {
+        color: #ef4444; font-weight: 900; font-size: 1.2em;
+    }
+
     /* --- Mobile responsive --- */
     @media (max-width: 768px) {
         .feature-card { padding: 16px 12px; min-height: 100px; }
@@ -414,8 +465,10 @@ except Exception as e:
 _NAV_ITEMS = [
     # Discover
     "🏠 Home",
+    "🎯 Daily Drop",
     "🔍 Player Search",
     "💰 What Can I Get?",
+    "🎰 Pack Simulator",
     "🚀 Breakout Leaderboard",
     "🏆 Legend Cards",
     "🏟️ Live Games",
@@ -431,6 +484,7 @@ _NAV_ITEMS = [
     "🔔 Price Alerts",
     # My Stuff
     "📁 My Collection",
+    "💪 Collection Battles",
 ]
 
 _NAV_MAP = {label: label.split(" ", 1)[1] for label in _NAV_ITEMS}
@@ -505,6 +559,8 @@ else:
 # ============================================================
 if page == "Home":
     home.render(current_user)
+elif page == "Daily Drop":
+    daily_drop.render()
 elif page == "Card Scanner":
     card_scanner.render()
 elif page == "Live Games":
@@ -513,6 +569,8 @@ elif page == "Player Search":
     player_search.render(demo_mode=DEMO_MODE)
 elif page == "What Can I Get?":
     budget_finder.render(demo_mode=DEMO_MODE)
+elif page == "Pack Simulator":
+    pack_simulator.render()
 elif page == "Price History":
     price_history.render()
 elif page == "Breakout Leaderboard":
@@ -531,6 +589,8 @@ elif page == "Price Alerts":
     price_alerts_page.render()
 elif page == "My Collection":
     my_collection.render(current_user)
+elif page == "Collection Battles":
+    collection_battles.render()
 elif page == "Grading Calculator":
     grading_calculator.render()
 elif page == "Upgrade":
@@ -573,4 +633,4 @@ with _lf3:
         st.session_state.nav_target = "legal_disclosure"
         st.rerun()
 st.sidebar.caption("Card Shark earns affiliate commissions on some links. Not financial advice.")
-st.sidebar.caption("Card Shark v6.3")
+st.sidebar.caption("Card Shark v7.0")

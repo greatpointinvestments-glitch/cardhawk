@@ -124,6 +124,9 @@ FREE_TIER_LIMITS = {
     "trades_per_day": 3,
     "portfolio_max_cards": 25,
     "scans_per_day": 3,       # kept low — Anthropic vision calls are the #1 cost driver
+    "packs_per_day": 3,
+    "battles_per_day": 3,
+    "daily_drop_history_days": 7,
 }
 
 PRO_FEATURES = [
