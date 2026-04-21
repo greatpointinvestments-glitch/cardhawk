@@ -67,12 +67,13 @@ NFL_CATEGORIES = {
     "Interceptions": "interceptions",
 }
 
+# MLB categories: (api_category, statGroup) — statGroup filters hitters vs pitchers
 MLB_CATEGORIES = {
-    "Batting Average": "battingAverage",
-    "Home Runs": "homeRuns",
-    "RBI": "runsBattedIn",
-    "ERA": "earnedRunAverage",
-    "Strikeouts": "strikeouts",
+    "Batting Average": ("battingAverage", "hitting"),
+    "Home Runs": ("homeRuns", "hitting"),
+    "RBI": ("runsBattedIn", "hitting"),
+    "ERA": ("earnedRunAverage", "pitching"),
+    "Strikeouts": ("strikeouts", "pitching"),
 }
 
 SPORT_CATEGORIES = {
@@ -161,11 +162,11 @@ def fetch_nfl_leaders(season: int = 0, limit: int = 50) -> dict[str, list[dict]]
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def fetch_mlb_leaders(season: int = 0, limit: int = 50) -> dict[str, list[dict]]:
-    """Fetch MLB leaders from MLB Stats API. Returns dict of category -> list."""
+    """Fetch MLB leaders from MLB Stats API. Returns dict keyed by 'category|statGroup'."""
     try:
         if not season:
             season = get_current_mlb_season()
-        categories = ",".join(MLB_CATEGORIES.values())
+        categories = ",".join(cat for cat, _group in MLB_CATEGORIES.values())
         url = (
             f"https://statsapi.mlb.com/api/v1/stats/leaders"
             f"?leaderCategories={categories}&season={season}&limit={limit}"
@@ -177,6 +178,7 @@ def fetch_mlb_leaders(season: int = 0, limit: int = 50) -> dict[str, list[dict]]
         results = {}
         for cat_data in data.get("leagueLeaders", []):
             cat_name = cat_data.get("leaderCategory", "")
+            stat_group = cat_data.get("statGroup", "")
             leaders_list = []
             for leader in cat_data.get("leaders", [])[:limit]:
                 person = leader.get("person", {})
@@ -187,8 +189,10 @@ def fetch_mlb_leaders(season: int = 0, limit: int = 50) -> dict[str, list[dict]]
                     "team": team_info.get("abbreviation", team_info.get("name", "")),
                     "value": leader.get("value", ""),
                 })
+            # Key by "category|statGroup" so we can pick the right group later
+            key = f"{cat_name}|{stat_group}"
             if cat_name:
-                results[cat_name] = leaders_list
+                results[key] = leaders_list
         return results
     except Exception:
         return {}
@@ -209,19 +213,22 @@ def get_leaders(sport: str, category_display: str, limit: int = 50) -> list[dict
         # ESPN category names may differ slightly — try exact match first, then fuzzy
         if api_key in all_nfl:
             return all_nfl[api_key]
-        # Try matching by key substring
         for k, v in all_nfl.items():
             if api_key.lower() in k.lower():
                 return v
-        # Fallback: return first matching category
         return []
 
     elif sport == "MLB":
+        # api_key is (category, statGroup) tuple
+        api_category, stat_group = api_key
         all_mlb = fetch_mlb_leaders(limit=limit)
-        if api_key in all_mlb:
-            return all_mlb[api_key]
+        # Exact match: "battingAverage|hitting"
+        exact_key = f"{api_category}|{stat_group}"
+        if exact_key in all_mlb:
+            return all_mlb[exact_key]
+        # Fuzzy fallback: match category and group separately
         for k, v in all_mlb.items():
-            if api_key.lower() in k.lower():
+            if api_category.lower() in k.lower() and stat_group.lower() in k.lower():
                 return v
         return []
 
