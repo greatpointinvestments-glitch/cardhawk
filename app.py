@@ -17,6 +17,7 @@ from views import (
     player_comparison, market_movers, price_alerts_page, my_collection,
     grading_calculator, budget_finder,
     daily_drop, pack_simulator, collection_battles,
+    league_leaders,
 )
 
 
@@ -473,6 +474,7 @@ _NAV_ITEMS = [
     "🚀 Breakout Leaderboard",
     "🏆 Legend Cards",
     "🏟️ Live Games",
+    "🥇 League Leaders",
     # Tools
     "📷 Card Scanner",
     "🔄 Trade Checker",
@@ -566,6 +568,8 @@ elif page == "Card Scanner":
     card_scanner.render()
 elif page == "Live Games":
     live_games.render()
+elif page == "League Leaders":
+    league_leaders.render()
 elif page == "Player Search":
     player_search.render(demo_mode=DEMO_MODE)
 elif page == "What Can I Get?":
