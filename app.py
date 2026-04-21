@@ -27,6 +27,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# --- Impact.com Site Verification ---
+st.markdown('<meta name="impact-site-verification" value="7f5de73e-561a-4412-be25-6945fd4abeef">', unsafe_allow_html=True)
+
 # --- Custom CSS ---
 st.markdown("""
 <style>
