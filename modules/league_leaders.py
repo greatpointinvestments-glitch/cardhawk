@@ -3,6 +3,8 @@
 NBA: nba_api library (LeagueLeaders endpoint)
 NFL: ESPN Core API (sports.core.api.espn.com) with concurrent athlete resolution
 MLB: MLB Stats API (statsapi.mlb.com)
+
+Award odds: ESPN futures (NBA/NFL) + FanDuel sportsbook (MLB)
 """
 
 from concurrent.futures import ThreadPoolExecutor
@@ -310,3 +312,183 @@ def get_leaders(sport: str, category_display: str, limit: int = 20) -> list[dict
         return []
 
     return []
+
+
+# --- Award Odds ---
+
+# ESPN futures IDs
+ESPN_FUTURES = {
+    "NBA": {"MVP": 2581, "ROY": 2582},
+    "NFL": {"MVP": 1208, "Offensive ROY": 1211, "Defensive ROY": 1212},
+}
+
+# MLB FanDuel market name patterns
+MLB_AWARD_PATTERNS = {
+    "AL MVP": "American League MVP",
+    "NL MVP": "National League MVP",
+    "AL ROY": "American League Rookie of the Year",
+    "NL ROY": "National League Rookie of the Year",
+    "AL Cy Young": "American League Cy Young",
+    "NL Cy Young": "National League Cy Young",
+}
+
+
+def get_award_season(sport: str) -> int:
+    """Return the season year for ESPN futures lookup.
+    NBA uses end-year (2025-26 season = 2026). NFL/MLB use start year."""
+    now = datetime.now()
+    if sport == "NBA":
+        # ESPN futures use the end-year of the season (2025-26 = 2026)
+        if is_nba_offseason():
+            return now.year + 1  # offseason Jul-Sep: next season
+        return now.year + 1 if now.month >= 10 else now.year
+    elif sport == "NFL":
+        if is_nfl_offseason():
+            return now.year  # next season starts in Sep
+        return now.year if now.month >= 9 else now.year - 1
+    elif sport == "MLB":
+        if is_mlb_offseason():
+            return now.year if now.month <= 3 else now.year + 1
+        return now.year
+    return now.year
+
+
+def _resolve_futures_athlete(ref_url: str) -> dict:
+    """Resolve an ESPN futures athlete $ref to {name, team}."""
+    try:
+        resp = requests.get(ref_url, timeout=8)
+        data = resp.json()
+        team_ref = data.get("team", {}).get("$ref", "")
+        team_abbr = ""
+        if team_ref:
+            try:
+                t = requests.get(team_ref, timeout=5).json()
+                team_abbr = t.get("abbreviation", "")
+            except Exception:
+                pass
+        return {"name": data.get("displayName", "Unknown"), "team": team_abbr}
+    except Exception:
+        return {"name": "Unknown", "team": ""}
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_espn_award_odds(sport: str, league: str, season: int, futures_id: int, limit: int = 5) -> list[dict]:
+    """Fetch award odds from ESPN Core API futures endpoint.
+    Returns [{"rank", "player", "team", "odds"}]."""
+    try:
+        url = (
+            f"https://sports.core.api.espn.com/v2/sports/{sport}/leagues/{league}"
+            f"/seasons/{season}/futures/{futures_id}"
+        )
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+
+        # Data is under futures[0].books[] — each book has athlete.$ref and value
+        futures_list = data.get("futures", [])
+        if not futures_list:
+            return []
+        books = futures_list[0].get("books", [])
+
+        entries = []
+        all_refs = set()
+        for item in books[:limit]:
+            athlete_ref = item.get("athlete", {}).get("$ref", "")
+            odds_val = item.get("value", "")
+            entries.append({"odds": odds_val, "ref": athlete_ref})
+            if athlete_ref:
+                all_refs.add(athlete_ref)
+
+        # Batch-resolve athlete refs concurrently
+        refs_list = list(all_refs)
+        ref_map = {}
+        if refs_list:
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                resolved = list(executor.map(_resolve_futures_athlete, refs_list))
+            for ref_url, athlete_data in zip(refs_list, resolved):
+                ref_map[ref_url] = athlete_data
+
+        results = []
+        for i, entry in enumerate(entries):
+            athlete = ref_map.get(entry["ref"], {"name": "Unknown", "team": ""})
+            results.append({
+                "rank": i + 1,
+                "player": athlete["name"],
+                "team": athlete["team"],
+                "odds": entry["odds"],
+            })
+        return results
+    except Exception:
+        return []
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_mlb_award_odds(limit: int = 5) -> dict[str, list[dict]]:
+    """Fetch MLB award odds from FanDuel sportsbook API.
+    Returns dict of award_name -> [{"rank", "player", "odds"}]."""
+    try:
+        url = (
+            "https://sbapi.nj.sportsbook.fanduel.com/api/content-managed-page"
+            "?page=CUSTOM&customPageId=mlb&_ak=FhMFpcPWXMeyZxOx"
+        )
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+
+        attachments = data.get("attachments", {})
+        markets = attachments.get("markets", {})
+
+        results = {}
+        for award_key in MLB_AWARD_PATTERNS:
+            results[award_key] = []
+
+        for market_id, market in markets.items():
+            market_name = market.get("marketName", "")
+            matched_award = None
+            for award_key, pattern in MLB_AWARD_PATTERNS.items():
+                if pattern.lower() in market_name.lower():
+                    matched_award = award_key
+                    break
+            if not matched_award:
+                continue
+
+            runners = market.get("runners", [])
+            entries = []
+            for runner in runners[:limit]:
+                player_name = runner.get("runnerName", "Unknown")
+                win_odds = runner.get("winRunnerOdds", {})
+                american_odds = win_odds.get("americanDisplayOdds", {}).get("americanOdds", "")
+                if not american_odds:
+                    decimal_odds = win_odds.get("decimalDisplayOdds", {}).get("decimalOdds", "")
+                    american_odds = decimal_odds
+                entries.append({
+                    "rank": len(entries) + 1,
+                    "player": player_name,
+                    "team": "",
+                    "odds": str(american_odds),
+                })
+            results[matched_award] = entries
+
+        return results
+    except Exception:
+        return {}
+
+
+def get_award_odds(sport: str) -> dict[str, list[dict]]:
+    """Unified entry point for award odds. Returns dict of award_name -> list of entries."""
+    try:
+        if sport == "MLB":
+            return fetch_mlb_award_odds(limit=5)
+
+        season = get_award_season(sport)
+        futures = ESPN_FUTURES.get(sport, {})
+        sport_lower = "basketball" if sport == "NBA" else "football"
+        league_lower = sport.lower()
+
+        results = {}
+        for award_name, futures_id in futures.items():
+            entries = fetch_espn_award_odds(sport_lower, league_lower, season, futures_id, limit=5)
+            results[award_name] = entries
+        return results
+    except Exception:
+        return {}

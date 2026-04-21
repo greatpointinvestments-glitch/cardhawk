@@ -3,7 +3,7 @@
 import streamlit as st
 
 from modules.league_leaders import (
-    get_leaders,
+    get_leaders, get_award_odds, get_award_season,
     is_nba_offseason, get_nba_display_season,
     is_mlb_offseason, get_mlb_display_season,
     is_nfl_offseason, get_nfl_display_season,
@@ -11,7 +11,7 @@ from modules.league_leaders import (
 )
 from modules.affiliates import ebay_search_affiliate_url
 from modules.ui_helpers import gradient_divider
-from tiers import is_pro, render_teaser_gate
+from tiers import is_pro, render_teaser_gate, render_upgrade_banner
 
 
 def render():
@@ -97,3 +97,85 @@ def render():
             t5.write("---")
         st.markdown('</div>', unsafe_allow_html=True)
         render_teaser_gate("League Leaders", "Unlock the full top 20 with Pro")
+
+    # --- Award Odds Section ---
+    _render_award_odds(sport, _is_pro)
+
+
+def _render_award_odds(sport: str, _is_pro: bool):
+    """Render the Award Odds section below the leaderboard."""
+    gradient_divider()
+
+    season_year = get_award_season(sport)
+    odds_source = "FanDuel" if sport == "MLB" else "ESPN BET"
+    # NBA season spans two years (e.g. 2025-26)
+    if sport == "NBA":
+        season_label = f"{season_year - 1}-{str(season_year)[-2:]}"
+    else:
+        season_label = str(season_year)
+    st.markdown("### Award Odds")
+    st.caption(f"{season_label} season \u2022 Odds via {odds_source}")
+
+    with st.spinner("Loading award odds..."):
+        odds_data = get_award_odds(sport)
+
+    if not odds_data or all(len(v) == 0 for v in odds_data.values()):
+        st.info("Odds not yet available for this season.")
+        return
+
+    # Determine which awards to show based on tier
+    # Free = MVP only, Pro = MVP + ROY + Cy Young
+    if sport == "MLB":
+        mvp_awards = ["AL MVP", "NL MVP"]
+        pro_awards = ["AL ROY", "NL ROY", "AL Cy Young", "NL Cy Young"]
+    elif sport == "NBA":
+        mvp_awards = ["MVP"]
+        pro_awards = ["ROY"]
+    else:  # NFL
+        mvp_awards = ["MVP"]
+        pro_awards = ["Offensive ROY", "Defensive ROY"]
+
+    # Always show MVP awards
+    _render_odds_columns(odds_data, mvp_awards, sport)
+
+    # Pro-only awards
+    if _is_pro:
+        _render_odds_columns(odds_data, pro_awards, sport)
+    else:
+        # Show teaser for ROY / Cy Young
+        pro_label = "ROY & Cy Young" if sport == "MLB" else "Rookie of the Year"
+        render_upgrade_banner("Award Odds", f"{pro_label} odds")
+
+
+def _render_odds_columns(odds_data: dict, award_names: list[str], sport: str):
+    """Render award odds in two-column layout."""
+    # Filter to awards that have data
+    active = [(name, odds_data.get(name, [])) for name in award_names]
+
+    # Render in rows of 2
+    for i in range(0, len(active), 2):
+        pair = active[i:i + 2]
+        cols = st.columns(len(pair))
+        for col, (award_name, entries) in zip(cols, pair):
+            with col:
+                st.markdown(f"**{award_name}**")
+                if not entries:
+                    st.caption("Not yet available")
+                    continue
+                for entry in entries:
+                    player = entry["player"]
+                    team = f" ({entry['team']})" if entry.get("team") else ""
+                    odds = entry["odds"]
+                    # Format odds with + prefix if positive number
+                    if odds and not str(odds).startswith("-") and not str(odds).startswith("+"):
+                        try:
+                            float(odds)
+                            odds = f"+{odds}"
+                        except ValueError:
+                            pass
+                    buy_url = ebay_search_affiliate_url(player, sport)
+                    st.markdown(
+                        f'#{entry["rank"]} {player}{team} \u2014 {odds} &nbsp; '
+                        f'<a href="{buy_url}" target="_blank" class="ebay-btn">Buy Cards</a>',
+                        unsafe_allow_html=True,
+                    )
