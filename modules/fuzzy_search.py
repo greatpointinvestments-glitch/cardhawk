@@ -2,8 +2,8 @@
 
 Builds a name database from:
 1. Live sports APIs (NBA, MLB, NFL) — covers every active player
-2. Watchlists as fallback if APIs fail
-3. Pokemon watchlist (no all-players API)
+2. Pokemon TCG API — covers every Pokemon card name
+3. Watchlists as fallback if APIs fail
 
 Cached with Streamlit's @st.cache_data so API calls happen once per day.
 """
@@ -36,9 +36,12 @@ def _fetch_nba_players() -> list[str]:
     try:
         from nba_api.stats.static import players
         active = players.get_active_players()
-        return [p["full_name"] for p in active]
+        names = [p["full_name"] for p in active]
+        if len(names) > 50:
+            return names
     except Exception:
-        return _watchlist_names("NBA")
+        pass
+    return _watchlist_names("NBA")
 
 
 @st.cache_data(ttl=86400, show_spinner=False)
@@ -49,12 +52,15 @@ def _fetch_mlb_players() -> list[str]:
         from datetime import datetime
         season = datetime.now().year
         url = f"https://statsapi.mlb.com/api/v1/sports/1/players?season={season}"
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, timeout=15)
         resp.raise_for_status()
         data = resp.json()
-        return [p["fullName"] for p in data.get("people", [])]
+        names = [p["fullName"] for p in data.get("people", [])]
+        if len(names) > 50:
+            return names
     except Exception:
-        return _watchlist_names("MLB")
+        pass
+    return _watchlist_names("MLB")
 
 
 @st.cache_data(ttl=86400, show_spinner=False)
@@ -64,9 +70,8 @@ def _fetch_nfl_players() -> list[str]:
         import requests
         from concurrent.futures import ThreadPoolExecutor
 
-        # Get all team IDs first
         teams_url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams"
-        resp = requests.get(teams_url, timeout=10)
+        resp = requests.get(teams_url, timeout=15)
         resp.raise_for_status()
         teams = resp.json().get("sports", [{}])[0].get("leagues", [{}])[0].get("teams", [])
         team_ids = [t["team"]["id"] for t in teams]
@@ -74,7 +79,7 @@ def _fetch_nfl_players() -> list[str]:
         def _get_roster(team_id):
             try:
                 url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_id}/roster"
-                r = requests.get(url, timeout=8)
+                r = requests.get(url, timeout=10)
                 r.raise_for_status()
                 names = []
                 for group in r.json().get("athletes", []):
@@ -87,22 +92,56 @@ def _fetch_nfl_players() -> list[str]:
                 return []
 
         all_names = []
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=8) as executor:
             results = list(executor.map(_get_roster, team_ids))
         for names in results:
             all_names.extend(names)
-        return all_names if all_names else _watchlist_names("NFL")
+        if len(all_names) > 50:
+            return all_names
     except Exception:
-        return _watchlist_names("NFL")
+        pass
+    return _watchlist_names("NFL")
 
 
+@st.cache_data(ttl=86400, show_spinner=False)
+def _fetch_pokemon_names() -> list[str]:
+    """Fetch all unique Pokemon names from the Pokemon TCG API."""
+    try:
+        import requests
+        # The Pokemon TCG API returns cards; we extract unique Pokemon names
+        # Fetch a large page of cards to get name diversity
+        all_names = set()
+        page = 1
+        while page <= 5:  # 5 pages x 250 = up to 1250 cards
+            url = f"https://api.pokemontcg.io/v2/cards?page={page}&pageSize=250&select=name"
+            resp = requests.get(url, timeout=15)
+            if resp.status_code != 200:
+                break
+            data = resp.json()
+            cards = data.get("data", [])
+            if not cards:
+                break
+            for card in cards:
+                name = card.get("name", "")
+                if name:
+                    # Strip suffixes like "V", "VMAX", "ex", "GX" to get base Pokemon name
+                    all_names.add(name)
+            page += 1
+        if len(all_names) > 50:
+            return sorted(all_names)
+    except Exception:
+        pass
+    return _watchlist_names("Pokemon")
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
 def _build_name_db() -> dict[str, list[str]]:
     """Build sport -> [player names] database from APIs + watchlists."""
     db = {
         "NBA": _fetch_nba_players(),
         "NFL": _fetch_nfl_players(),
         "MLB": _fetch_mlb_players(),
-        "Pokemon": _watchlist_names("Pokemon"),
+        "Pokemon": _fetch_pokemon_names(),
     }
 
     # Add legends to all sports (they're popular search targets)
@@ -110,18 +149,17 @@ def _build_name_db() -> dict[str, list[str]]:
     for sport in ("NBA", "NFL", "MLB"):
         db[sport] = list(dict.fromkeys(db[sport] + legend_names))
 
-    # Deduplicate each sport
-    for sport in db:
-        db[sport] = list(dict.fromkeys(db[sport]))
+    # Add watchlist names too (ensures breakout candidates are always in the pool)
+    for sport, wl_func in [("NBA", "NBA"), ("NFL", "NFL"), ("MLB", "MLB"), ("Pokemon", "Pokemon")]:
+        wl_names = _watchlist_names(wl_func)
+        db[sport] = list(dict.fromkeys(db[sport] + wl_names))
 
     return db
 
 
 def _get_name_db() -> dict[str, list[str]]:
-    """Get or build the name database. Uses session state to avoid rebuilding."""
-    if "fuzzy_name_db" not in st.session_state:
-        st.session_state.fuzzy_name_db = _build_name_db()
-    return st.session_state.fuzzy_name_db
+    """Get or build the name database."""
+    return _build_name_db()
 
 
 def _get_all_names() -> list[str]:
