@@ -3,14 +3,13 @@
 import streamlit as st
 
 from modules.ui_helpers import (
-    card_thumbnail, card_thumbnail_lg, format_badge, deal_badge,
-    ebay_button, market_signal_badge, gradient_divider,
+    card_thumbnail, format_badge, deal_badge,
+    ebay_button, gradient_divider,
 )
 from modules.affiliates import affiliate_url
 from modules.deal_radar import get_top_deals, prepare_watchlist_data
 from modules.breakout_engine import build_leaderboard
 from modules.price_alerts import get_alerts
-from modules.card_of_day import get_card_of_the_day
 from modules.ebay_search import search_ebay_cards
 from modules.affiliates import ebay_search_affiliate_url
 from config.settings import ANON_SEARCH_LIMIT, SOCIAL_PROOF_STATS
@@ -259,40 +258,6 @@ def render(current_user: str | None):
             if st.button("Vote Now — Sign Up Free", key="home_drop_signup"):
                 st.session_state.auth_tab = "Sign Up"
                 st.rerun()
-
-    # --- Card of the Day ---
-    with st.spinner("Loading Card of the Day..."):
-        cotd = get_card_of_the_day()
-
-    if cotd:
-        gradient_divider()
-        st.markdown("### Card of the Day")
-        cotd_left, cotd_right = st.columns([1, 3])
-        with cotd_left:
-            st.markdown(card_thumbnail_lg(cotd["image_url"]), unsafe_allow_html=True)
-        with cotd_right:
-            listing = cotd["listing"]
-            st.markdown(f"**{cotd['player_name']}** ({cotd['sport']}) — {cotd['source']} Watchlist")
-            st.markdown(f"*{listing['title'][:80]}*")
-            cm1, cm2, cm3 = st.columns(3)
-            cm1.metric("BIN Price", f"${listing['total']:.2f}")
-            if cotd["summary"]:
-                cm2.metric("Avg Sold", f"${cotd['summary']['avg_sold']:.2f}")
-                cm3.markdown(market_signal_badge(cotd["summary"]["market_signal"]), unsafe_allow_html=True)
-            st.caption(cotd["why"])
-            _cotd_btn1, _cotd_btn2, _cotd_btn3 = st.columns(3)
-            with _cotd_btn1:
-                st.markdown(ebay_button(listing["url"]), unsafe_allow_html=True)
-            with _cotd_btn2:
-                if current_user and st.button("Add to Collection", key="cotd_add_collection"):
-                    st.session_state.prefill_player = cotd["player_name"]
-                    st.session_state.nav_target = "📁 My Collection"
-                    st.rerun()
-            with _cotd_btn3:
-                if current_user and st.button("Set Price Alert", key="cotd_set_alert"):
-                    st.session_state.prefill_alert_player = cotd["player_name"]
-                    st.session_state.nav_target = "🔔 Price Alerts"
-                    st.rerun()
 
     gradient_divider()
 
