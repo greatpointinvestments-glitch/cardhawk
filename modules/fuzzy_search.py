@@ -170,11 +170,42 @@ def _get_all_names() -> list[str]:
     ))
 
 
+def _full_name_score(query: str, candidate: str) -> int:
+    """Score that requires both first and last name to match for multi-word queries.
+
+    For single-word queries, uses token_sort_ratio as before.
+    For multi-word queries, checks that each query token has a decent match
+    in the candidate tokens — prevents 'connor griffin' from matching 'Griffin Conine'.
+    """
+    query_parts = query.lower().split()
+    cand_parts = candidate.lower().split()
+
+    if len(query_parts) < 2 or len(cand_parts) < 2:
+        return fuzz.token_sort_ratio(query, candidate)
+
+    # For each query token, find the best match among candidate tokens
+    token_scores = []
+    for qp in query_parts:
+        best = max(fuzz.ratio(qp, cp) for cp in cand_parts)
+        token_scores.append(best)
+
+    # All tokens must match reasonably — use the minimum token score
+    # weighted with the overall string score
+    min_token = min(token_scores)
+    overall = fuzz.token_sort_ratio(query, candidate)
+
+    # If any token matches below 67, it's a bad match (e.g. "connor" vs "conine")
+    if min_token < 67:
+        return min(min_token, overall // 2)
+
+    return int(overall * 0.6 + min_token * 0.4)
+
+
 def suggest_players(
     query: str,
     sport: str | None = None,
     limit: int = 5,
-    min_score: int = 50,
+    min_score: int = 55,
 ) -> list[dict]:
     """Return fuzzy-matched player suggestions for a query.
 
@@ -196,15 +227,22 @@ def suggest_players(
     if not pool:
         return []
 
-    results = process.extract(
-        query,
-        pool,
-        scorer=fuzz.token_sort_ratio,
-        limit=limit,
-    )
+    # For multi-word queries, use custom scorer that requires both name parts to match
+    query_parts = query.strip().split()
+    if len(query_parts) >= 2:
+        scored = [(name, _full_name_score(query, name)) for name in pool]
+        scored.sort(key=lambda x: x[1], reverse=True)
+        results = scored[:limit]
+    else:
+        results = [
+            (name, score)
+            for name, score, _idx in process.extract(
+                query, pool, scorer=fuzz.token_sort_ratio, limit=limit,
+            )
+        ]
 
     suggestions = []
-    for name, score, _idx in results:
+    for name, score in results:
         if score >= min_score and name.lower() != query.lower():
             suggestions.append({"name": name, "score": int(score)})
 
