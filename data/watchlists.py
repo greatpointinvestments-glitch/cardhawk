@@ -35,16 +35,24 @@ NBA_BREAKOUT_WATCHLIST = [
     # 2022 Draft Class
     {"name": "Paolo Banchero", "team": "Orlando Magic", "age": 22, "draft_year": 2022, "draft_pick": 1, "seasons": 3},
     {"name": "Chet Holmgren", "team": "Oklahoma City Thunder", "age": 22, "draft_year": 2022, "draft_pick": 2, "seasons": 2},
+    {"name": "Jabari Smith Jr", "team": "Houston Rockets", "age": 22, "draft_year": 2022, "draft_pick": 3, "seasons": 3},
+    {"name": "Keegan Murray", "team": "Sacramento Kings", "age": 24, "draft_year": 2022, "draft_pick": 4, "seasons": 3},
+    {"name": "Jaden Ivey", "team": "Detroit Pistons", "age": 23, "draft_year": 2022, "draft_pick": 5, "seasons": 3},
+    # 2021 Draft Class
+    {"name": "Cade Cunningham", "team": "Detroit Pistons", "age": 24, "draft_year": 2021, "draft_pick": 1, "seasons": 4},
     {"name": "Evan Mobley", "team": "Cleveland Cavaliers", "age": 23, "draft_year": 2021, "draft_pick": 3, "seasons": 4},
     {"name": "Scottie Barnes", "team": "Toronto Raptors", "age": 23, "draft_year": 2021, "draft_pick": 4, "seasons": 4},
     {"name": "Franz Wagner", "team": "Orlando Magic", "age": 23, "draft_year": 2021, "draft_pick": 8, "seasons": 4},
-    # Young Stars (2-5 seasons)
+    # Young Stars (2-7 seasons)
     {"name": "Anthony Edwards", "team": "Minnesota Timberwolves", "age": 23, "draft_year": 2020, "draft_pick": 1, "seasons": 5},
+    {"name": "LaMelo Ball", "team": "Charlotte Hornets", "age": 24, "draft_year": 2020, "draft_pick": 3, "seasons": 5},
     {"name": "Tyrese Maxey", "team": "Philadelphia 76ers", "age": 24, "draft_year": 2020, "draft_pick": 21, "seasons": 5},
     {"name": "Tyrese Haliburton", "team": "Indiana Pacers", "age": 24, "draft_year": 2020, "draft_pick": 12, "seasons": 5},
     {"name": "Jalen Green", "team": "Houston Rockets", "age": 23, "draft_year": 2021, "draft_pick": 2, "seasons": 4},
     {"name": "Ja Morant", "team": "Memphis Grizzlies", "age": 25, "draft_year": 2019, "draft_pick": 2, "seasons": 5},
+    {"name": "Zion Williamson", "team": "New Orleans Pelicans", "age": 25, "draft_year": 2019, "draft_pick": 1, "seasons": 5},
     {"name": "Trae Young", "team": "Atlanta Hawks", "age": 26, "draft_year": 2018, "draft_pick": 5, "seasons": 7},
+    {"name": "Luka Doncic", "team": "Los Angeles Lakers", "age": 27, "draft_year": 2018, "draft_pick": 3, "seasons": 7},
     {"name": "Shai Gilgeous-Alexander", "team": "Oklahoma City Thunder", "age": 26, "draft_year": 2018, "draft_pick": 11, "seasons": 7},
     {"name": "Lauri Markkanen", "team": "Utah Jazz", "age": 27, "draft_year": 2017, "draft_pick": 7, "seasons": 8},
 ]
