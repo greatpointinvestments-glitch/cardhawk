@@ -111,7 +111,7 @@ def render(demo_mode: bool = False):
     expanded_legend = st.session_state.get("legend_expanded")
 
     for player in filtered:
-        cols = st.columns([0.5, 2.5, 0.8, 1.5, 1, 1.5])
+        cols = st.columns([0.5, 2.5, 0.8, 1, 1.5])
         with cols[0]:
             st.write(f"**#{player['rank']}**")
         with cols[1]:
@@ -127,11 +127,9 @@ def render(demo_mode: bool = False):
         with cols[2]:
             st.write(player["sport"])
         with cols[3]:
-            st.write(player["hof"])
-        with cols[4]:
             st.write(f"**{player['score']}**")
             st.markdown(score_progress_bar(player['score']), unsafe_allow_html=True)
-        with cols[5]:
+        with cols[4]:
             st.markdown(signal_badge(player["rating"]), unsafe_allow_html=True)
 
         # Inline Deep Dive
