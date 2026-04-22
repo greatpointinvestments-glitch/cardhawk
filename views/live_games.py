@@ -7,7 +7,7 @@ from modules.portfolio import get_portfolio
 from modules.live_games import get_todays_games, match_players_to_games, build_watch_links, get_game_card_impact
 from modules.game_night import get_active_game_alerts, evaluate_game_score
 from modules.affiliates import ebay_search_affiliate_url
-from data.watchlists import NBA_BREAKOUT_WATCHLIST, NFL_BREAKOUT_WATCHLIST, MLB_BREAKOUT_WATCHLIST
+from data.watchlists import NBA_BREAKOUT_WATCHLIST, NFL_BREAKOUT_WATCHLIST, MLB_BREAKOUT_WATCHLIST, LEGENDS_WATCHLIST
 from tiers import is_pro
 
 
@@ -36,7 +36,23 @@ def render():
                 "source": "Portfolio",
             })
     if game_source in ("Watchlist", "Both"):
-        wl_map = {"NBA": NBA_BREAKOUT_WATCHLIST, "NFL": NFL_BREAKOUT_WATCHLIST, "MLB": MLB_BREAKOUT_WATCHLIST}
+        # Combine breakout candidates + legends for a full player pool
+        _legends_by_sport = {}
+        for p in LEGENDS_WATCHLIST:
+            _ls = p.get("sport", p.get("sport_display", "NBA"))
+            # Handle legends that have sport_display like "Basketball"
+            if _ls == "Basketball":
+                _ls = "NBA"
+            elif _ls == "Football":
+                _ls = "NFL"
+            elif _ls == "Baseball":
+                _ls = "MLB"
+            _legends_by_sport.setdefault(_ls, []).append(p)
+        wl_map = {
+            "NBA": NBA_BREAKOUT_WATCHLIST + _legends_by_sport.get("NBA", []),
+            "NFL": NFL_BREAKOUT_WATCHLIST + _legends_by_sport.get("NFL", []),
+            "MLB": MLB_BREAKOUT_WATCHLIST + _legends_by_sport.get("MLB", []),
+        }
         for sport in game_sports:
             for p in wl_map.get(sport, []):
                 if not any(pl["player_name"].lower() == p["name"].lower() for pl in player_list):
