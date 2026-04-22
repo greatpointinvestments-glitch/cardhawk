@@ -71,7 +71,8 @@ def _render_deep_dive(selected: str, breakout_sport: str, breakout_watchlist: li
             if deal_count:
                 st.success(f"Found {deal_count} deals below median!")
 
-            for listing in listings[:10]:
+            sorted_listings = sorted(listings, key=lambda l: l.get("vs_median", 0))
+            for listing in sorted_listings[:10]:
                 render_listing_compact(listing)
 
         with st.spinner("Fetching sold data..."):
