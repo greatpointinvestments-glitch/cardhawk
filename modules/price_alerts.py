@@ -65,6 +65,9 @@ def add_alert(
     alert_type: str,
     threshold_price: float,
     note: str = "",
+    year: str | None = None,
+    set_name: str | None = None,
+    variant: str | None = None,
 ) -> dict:
     """Add a new price alert. alert_type is 'below' or 'above'."""
     alerts = _load_alerts()
@@ -80,6 +83,12 @@ def add_alert(
         "triggered": False,
         "last_price": None,
     }
+    if year:
+        new_alert["year"] = year
+    if set_name:
+        new_alert["set_name"] = set_name
+    if variant:
+        new_alert["variant"] = variant
     alerts.append(new_alert)
     _save_alerts(alerts)
     return new_alert
