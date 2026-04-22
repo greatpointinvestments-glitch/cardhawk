@@ -27,14 +27,18 @@ def render():
     with ph_c3:
         ph_type = st.selectbox("Card Type", get_card_type_options(), key="ph_type")
 
-    # Fuzzy search suggestions
+    # Fuzzy search suggestions — if suggestions appear, don't run the search yet
+    _has_suggestions = False
     if ph_player:
         _sug = render_fuzzy_suggestions(ph_player, ph_sport, key_prefix="ph_fz")
         if _sug:
             st.session_state["_ph_fuzzy_pick"] = _sug
             st.rerun()
+        # Check if suggestions were rendered (player not an exact match)
+        from modules.fuzzy_search import has_exact_match
+        _has_suggestions = not has_exact_match(ph_player, ph_sport)
 
-    if ph_player:
+    if ph_player and not _has_suggestions:
         _free_ranges = ["7d", "30d"]
         _pro_ranges = ["90d", "1Y"]
         _all_ranges = _free_ranges + _pro_ranges
