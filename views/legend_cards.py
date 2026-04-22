@@ -10,7 +10,7 @@ from modules.ui_helpers import (
 from modules.legends import build_legends_table, get_hidden_gems
 from modules.ebay_search import search_ebay_cards, search_ebay_sold, flag_deals, get_market_summary
 from modules.card_types import get_card_type_options
-from data.watchlists import LEGENDS_WATCHLIST, POKEMON_LEGENDS_WATCHLIST
+from data.watchlists import LEGENDS_WATCHLIST
 
 
 def _render_legend_deep_dive(legend: dict, source: dict, demo_mode: bool = False):
@@ -87,8 +87,7 @@ def render(demo_mode: bool = False):
     st.title("🏆 Legend Cards")
     st.caption("The GOATs. The classics. The cards your dad wishes he kept.")
 
-    all_sources = LEGENDS_WATCHLIST + POKEMON_LEGENDS_WATCHLIST
-    legends = build_legends_table(all_sources)
+    legends = build_legends_table(LEGENDS_WATCHLIST)
 
     if not legends:
         st.error("Could not load legends data.")
@@ -102,7 +101,7 @@ def render(demo_mode: bool = False):
     m2.metric("STRONG BUY", strong_buys)
     m3.metric("BUY", buys)
 
-    sport_filter = st.multiselect("Filter by Sport", ["NBA", "NFL", "MLB", "Pokemon"], default=["NBA", "NFL", "MLB", "Pokemon"])
+    sport_filter = st.multiselect("Filter by Sport", ["NBA", "NFL", "MLB"], default=["NBA", "NFL", "MLB"])
     filtered = [p for p in legends if p["sport"] in sport_filter]
 
     gradient_divider()
@@ -134,7 +133,7 @@ def render(demo_mode: bool = False):
 
         # Inline Deep Dive
         if expanded_legend == player["name"]:
-            source = next((p for p in all_sources if p["name"] == player["name"]), None)
+            source = next((p for p in LEGENDS_WATCHLIST if p["name"] == player["name"]), None)
             if source:
                 st.markdown("---")
                 _render_legend_deep_dive(player, source, demo_mode)
