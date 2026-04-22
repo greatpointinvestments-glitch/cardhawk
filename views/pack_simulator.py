@@ -341,7 +341,9 @@ def _render_card_row(card: dict, sport: str):
         st.markdown(
             f'<div style="{bg}{border}padding:6px 12px;border-radius:6px;margin:2px 0;">'
             f'<strong>{card["player_name"]}</strong>{hit_tag}<br>'
-            f'<span style="color:#9ca3af;font-size:0.9em;">{card["tier_name"]} &bull; {card["card_type"]}</span>'
+            f'<span style="color:#9ca3af;font-size:0.9em;">{card["tier_name"]}'
+            f'{" &bull; " + card["card_type"] if card["card_type"] != card["tier_name"] else ""}'
+            f'</span>'
             f'</div>',
             unsafe_allow_html=True,
         )
