@@ -74,8 +74,8 @@ def render(current_user: str | None):
             pf_grade_company = st.selectbox("Grading Company", _GRADE_COMPANIES, key="pf_grade_co",
                                             help="Leave blank for raw/ungraded cards")
         with gc2:
-            _grade_opts = _GRADE_VALUES.get(pf_grade_company, [""]) if pf_grade_company else [""]
-            pf_grade_value = st.selectbox("Grade", _grade_opts, key="pf_grade_val") if pf_grade_company else ""
+            pf_grade_value = st.text_input("Grade", placeholder="e.g. 10, 9.5, 9", key="pf_grade_val",
+                                           help="PSA: 1-10 | BGS/CGC/SGC: 1-10 with half grades")
 
         pf_submit = st.form_submit_button("Add to Collection")
 
