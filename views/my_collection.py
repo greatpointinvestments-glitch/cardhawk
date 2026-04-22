@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from urllib.parse import quote_plus
 from modules.ui_helpers import gradient_divider, score_progress_bar, supplies_button, render_fuzzy_suggestions
 from modules.affiliates import supplies_affiliate_url, SUPPLIES_LINKS
-from modules.portfolio import add_card, remove_card, get_portfolio, bulk_import_cards
+from modules.portfolio import add_card, remove_card, update_card_image, get_portfolio, bulk_import_cards
 from modules.collection_analytics import compute_collection_analytics, compute_portfolio_timeline, export_portfolio_csv
 from modules.trade_analyzer import get_card_market_value
 from modules.card_types import get_card_type_options
@@ -298,6 +298,10 @@ def render(current_user: str | None):
                 )
                 val = market["avg_sold"] if market["avg_sold"] > 0 else market["avg_active"]
                 st.session_state.portfolio_values[card["id"]] = val
+                # Save card image if we got one and the card doesn't have one yet
+                if market.get("image_url") and not card.get("image_url"):
+                    update_card_image(card["id"], market["image_url"])
+                    card["image_url"] = market["image_url"]  # update in-memory too
 
     analytics = compute_collection_analytics(portfolio, st.session_state.portfolio_values)
 

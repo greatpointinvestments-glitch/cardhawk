@@ -117,6 +117,19 @@ def add_card(
     return new_card
 
 
+def update_card_image(card_id: str, image_url: str) -> bool:
+    """Update a card's image_url. Returns True if found and updated."""
+    if not image_url:
+        return False
+    cards = _load_portfolio()
+    for card in cards:
+        if card["id"] == card_id:
+            card["image_url"] = image_url
+            _save_portfolio(cards)
+            return True
+    return False
+
+
 def remove_card(card_id: str) -> bool:
     """Remove a card by UUID. Returns True if found and removed."""
     cards = _load_portfolio()

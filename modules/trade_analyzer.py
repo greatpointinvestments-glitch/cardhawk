@@ -34,6 +34,7 @@ def get_card_market_value(
         "trend_delta": 0,
         "market_signal": "FAIR VALUE",
         "on_breakout_watchlist": player_name.lower() in _BREAKOUT_NAMES,
+        "image_url": "",
     }
 
     if sport == "Pokemon":
@@ -48,6 +49,9 @@ def get_card_market_value(
                 "trend_delta": summary["trend_delta"],
                 "market_signal": summary["market_signal"],
             })
+            # Grab first card image
+            if cards[0].get("image_small"):
+                result["image_url"] = cards[0]["image_small"]
         return result
 
     listings = search_ebay_cards(player_name, sport, card_type, limit=30,
@@ -66,6 +70,13 @@ def get_card_market_value(
             "trend_delta": summary["trend_delta"],
             "market_signal": summary["market_signal"],
         })
+
+    # Grab first listing image
+    if listings:
+        for l in listings:
+            if l.get("image_url"):
+                result["image_url"] = l["image_url"]
+                break
 
     return result
 
