@@ -18,9 +18,16 @@ def render(demo_mode: bool = False):
     st.caption("Enter your budget and pick a player — we'll find the best cards you can afford")
     render_disclaimer(compact=True)
 
+    # Pick up fuzzy suggestion from previous click (before widget renders)
+    _player_default = st.session_state.pop("_bf_fuzzy_pick", "")
+
     col1, col2, col3 = st.columns(3)
     with col1:
-        player_name = st.text_input("Player Name", placeholder="e.g. Victor Wembanyama", key="bf_player")
+        if _player_default:
+            # Clear widget key so it re-initializes with new default
+            st.session_state.pop("bf_player", None)
+        player_name = st.text_input("Player Name", placeholder="e.g. Victor Wembanyama",
+                                    value=_player_default or "", key="bf_player")
     with col2:
         sport = st.selectbox("Sport", ["NBA", "NFL", "MLB", "Pokemon"], key="bf_sport")
     with col3:
@@ -38,7 +45,7 @@ def render(demo_mode: bool = False):
     if player_name:
         _bf_suggestion = render_fuzzy_suggestions(player_name, sport, key_prefix="bf_fz")
         if _bf_suggestion:
-            st.session_state["bf_player"] = _bf_suggestion
+            st.session_state["_bf_fuzzy_pick"] = _bf_suggestion
             st.rerun()
 
     if not player_name:
