@@ -64,15 +64,17 @@ def _pick_player(sport: str, rng: random.Random) -> dict:
     return rng.choice(pool)
 
 
-def _estimate_card_value(player_name: str, sport: str, card_type: str) -> float:
-    """Estimate market value. Tries real API first, falls back to multiplier."""
-    try:
-        from modules.trade_analyzer import get_card_market_value
-        result = get_card_market_value(player_name, sport, card_type)
-        if result and result.get("avg_sold", 0) > 0:
-            return round(result["avg_sold"], 2)
-    except Exception:
-        pass
+def _estimate_card_value(player_name: str, sport: str, card_type: str, is_hit: bool = False) -> float:
+    """Estimate market value. Hits get real API pricing; base/common use multiplier."""
+    # Only call the API for hits — base cards get inflated values from generic searches
+    if is_hit:
+        try:
+            from modules.trade_analyzer import get_card_market_value
+            result = get_card_market_value(player_name, sport, card_type)
+            if result and result.get("avg_sold", 0) > 0:
+                return round(result["avg_sold"], 2)
+        except Exception:
+            pass
 
     # Fallback: base value * multiplier
     base_value = 2.00 if sport != "Pokemon" else 1.00
@@ -140,7 +142,7 @@ def rip_pack(product_key: str) -> list[dict]:
         player = _pick_player(sport, rng)
         player_name = player.get("name", player.get("player_name", "Unknown"))
 
-        value = _estimate_card_value(player_name, sport, tier["card_type"])
+        value = _estimate_card_value(player_name, sport, tier["card_type"], is_hit=tier["is_hit"])
 
         # Fetch card image (hits get priority, base cards get images too)
         image_url = _fetch_card_image(player_name, sport, tier["card_type"])
