@@ -18,27 +18,20 @@ def render():
         render_upgrade_prompt("Flip Finder", "See which cards are listed below their sold prices — the easiest money in the hobby.")
         st.stop()
 
-    ff_c1, ff_c2, ff_c3 = st.columns([2, 2, 1.5])
+    ff_c1, ff_c2 = st.columns(2)
     with ff_c1:
         ff_sports = st.multiselect("Sports", ["NBA", "NFL", "MLB", "Pokemon"], default=["NBA", "NFL", "MLB"], key="ff_sports")
     with ff_c2:
         ff_type = st.selectbox("Card Type", get_card_type_options(), key="ff_type")
-    with ff_c3:
-        ff_conf = st.select_slider(
-            "Min Confidence",
-            options=["Low", "Medium", "High"],
-            value="Medium",
-            key="ff_confidence",
-            help="Filters out flips with thin comp data or sketchy sellers.",
-        )
-    _conf_threshold = {"Low": 40, "Medium": 60, "High": 80}[ff_conf]
 
     if ff_sports:
         with st.spinner("Scanning for flip opportunities..."):
-            flips = find_flip_opportunities(ff_sports, ff_type, min_confidence=_conf_threshold, exclude_chase=True)
+            flips = find_flip_opportunities(ff_sports, ff_type, min_confidence=40, exclude_chase=True)
 
+        # Sort by confidence (highest first)
         if flips:
-            st.success(f"Found {len(flips)} flip opportunities (confidence >= {_conf_threshold}).")
+            flips.sort(key=lambda f: f.get("confidence", 0), reverse=True)
+            st.success(f"Found {len(flips)} flip opportunities, sorted by confidence.")
 
             for flip in flips:
                 fc0, fc1, fc2, fc3, fc4, fc5 = st.columns([0.7, 3, 1.2, 1.2, 1.2, 1.2])
