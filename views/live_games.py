@@ -19,50 +19,46 @@ def render():
     with gf1:
         game_sports = st.multiselect("Sports", ["NBA", "NFL", "MLB"], default=["NBA", "NFL", "MLB"], key="game_sports")
     with gf2:
-        game_source = st.radio("Players from", ["Both", "My Portfolio", "Watchlist"], horizontal=True, key="game_source")
+        game_sources = st.multiselect(
+            "Track players from",
+            ["My Collection", "Breakout Leaderboard", "Active Legends"],
+            default=["My Collection", "Breakout Leaderboard", "Active Legends"],
+            key="game_sources",
+        )
     with gf3:
         auto_refresh = st.toggle("Auto-refresh (2 min)", value=False, key="game_auto_refresh")
 
     gradient_divider()
 
     player_list = []
-    if game_source in ("My Portfolio", "Both"):
+    _seen = set()
+
+    def _add_player(name, sport, team="", card_type="", source=""):
+        key = name.lower()
+        if key not in _seen:
+            _seen.add(key)
+            player_list.append({
+                "player_name": name, "sport": sport,
+                "team": team, "card_type": card_type, "source": source,
+            })
+
+    if "My Collection" in game_sources:
         portfolio = get_portfolio()
         for card in portfolio:
-            player_list.append({
-                "player_name": card["player_name"],
-                "sport": card["sport"],
-                "card_type": card.get("card_type", ""),
-                "source": "Portfolio",
-            })
-    if game_source in ("Watchlist", "Both"):
-        # Combine breakout candidates + legends for a full player pool
-        _legends_by_sport = {}
-        for p in LEGENDS_WATCHLIST:
-            _ls = p.get("sport", p.get("sport_display", "NBA"))
-            # Handle legends that have sport_display like "Basketball"
-            if _ls == "Basketball":
-                _ls = "NBA"
-            elif _ls == "Football":
-                _ls = "NFL"
-            elif _ls == "Baseball":
-                _ls = "MLB"
-            _legends_by_sport.setdefault(_ls, []).append(p)
-        wl_map = {
-            "NBA": NBA_BREAKOUT_WATCHLIST + _legends_by_sport.get("NBA", []),
-            "NFL": NFL_BREAKOUT_WATCHLIST + _legends_by_sport.get("NFL", []),
-            "MLB": MLB_BREAKOUT_WATCHLIST + _legends_by_sport.get("MLB", []),
-        }
+            _add_player(card["player_name"], card["sport"],
+                        card_type=card.get("card_type", ""), source="Collection")
+
+    if "Breakout Leaderboard" in game_sources:
+        _breakout_map = {"NBA": NBA_BREAKOUT_WATCHLIST, "NFL": NFL_BREAKOUT_WATCHLIST, "MLB": MLB_BREAKOUT_WATCHLIST}
         for sport in game_sports:
-            for p in wl_map.get(sport, []):
-                if not any(pl["player_name"].lower() == p["name"].lower() for pl in player_list):
-                    player_list.append({
-                        "player_name": p["name"],
-                        "sport": sport,
-                        "team": p["team"],
-                        "card_type": "",
-                        "source": "Watchlist",
-                    })
+            for p in _breakout_map.get(sport, []):
+                _add_player(p["name"], sport, team=p["team"], source="Breakout")
+
+    if "Active Legends" in game_sources:
+        for p in LEGENDS_WATCHLIST:
+            _ls = p.get("sport", "NBA")
+            if _ls in game_sports:
+                _add_player(p["name"], _ls, team=p.get("team", ""), source="Legend")
 
     all_games = []
     for sport in game_sports:
@@ -83,7 +79,7 @@ def render():
     sm4.metric("Games Upcoming", games_upcoming)
 
     # --- Game Night Alerts ---
-    portfolio = get_portfolio() if game_source in ("My Portfolio", "Both") else []
+    portfolio = get_portfolio() if "My Collection" in game_sources else []
     if portfolio and all_games:
         alerts = get_active_game_alerts(portfolio, all_games)
         _user_is_pro = is_pro()
@@ -179,6 +175,6 @@ def render():
                 st.caption(f"{m['player_name']} — {m.get('team', 'N/A')} ({m.get('source', '')})")
 
     if not player_list:
-        st.info("Add cards to your portfolio or use the watchlist to track players during games.")
+        st.info("Select a player source above — My Collection, Breakout Leaderboard, or Active Legends.")
 
 
