@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated: April 13, 2026**
+**Last updated: April 22, 2026**
 
 This policy explains what we collect, why, and what we do with it.
 
@@ -55,12 +55,12 @@ We use essential cookies to keep you logged in. Analytics cookies are used only 
 
 ## Affiliate Links
 
-When you click through to eBay, PWCC, COMC, or other marketplaces from Card Shark, those sites set their own cookies per their own privacy policies. We only know that a click occurred and if you completed a purchase (for commission purposes). We don't receive your shopping cart or personal info from those sites.
+When you click through to eBay, TCGPlayer, PWCC, COMC, or other marketplaces from Card Shark, those sites set their own cookies per their own privacy policies. We only know that a click occurred and if you completed a purchase (for commission purposes). We don't receive your shopping cart or personal info from those sites.
 
 ## Third Parties We Use
 
 - **Stripe** — payment processing
-- **eBay / PWCC / COMC / Fanatics Collect / Alt / Goldin** — marketplace data and affiliate links
+- **eBay / TCGPlayer / PWCC / COMC / Fanatics Collect / Alt / Goldin** — marketplace data and affiliate links
 - **Railway** — API hosting
 - **Supabase** — database and image storage
 - **Firebase Cloud Messaging** — push notification delivery (iOS and Android)

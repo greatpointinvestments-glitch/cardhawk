@@ -1,6 +1,6 @@
 # Terms of Service
 
-**Last updated: April 13, 2026**
+**Last updated: April 22, 2026**
 
 Welcome to Card Shark ("we", "us", "our"). By using cardsharkapp.com or any of our services, you agree to these Terms.
 
@@ -42,30 +42,48 @@ You may not:
 
 ## 7. Third-Party Links and Affiliate Relationships
 
-Card Shark contains affiliate links to eBay, PWCC, COMC, Fanatics Collect, Alt, Goldin, and other marketplaces. We may earn a commission when you buy through these links. This does not affect the data we show or our recommendations. See our [Affiliate Disclosure](/disclosure) for details.
+Card Shark contains affiliate links to eBay, TCGPlayer, PWCC, COMC, Fanatics Collect, Alt, Goldin, and other marketplaces. We may earn a commission when you buy through these links. This does not affect the data we show or our recommendations. See our [Affiliate Disclosure](/disclosure) for details.
 
 We are not responsible for the content, condition, or authenticity of cards sold on third-party marketplaces.
 
-## 8. Data Sources
+## 8. Award Odds and Sports Data
 
-We aggregate data from public APIs (eBay Browse API, eBay Finding API) and public marketplace pages. Data may be delayed, incomplete, or inaccurate. We make no warranty on data accuracy.
+Card Shark displays publicly available award odds (MVP, Rookie of the Year, Cy Young, etc.) sourced from third-party providers for **informational purposes only**. Card Shark is **not** a sportsbook and does not facilitate, encourage, or enable wagering of any kind.
 
-## 9. Limitation of Liability
+- We do not accept bets, wagers, or deposits.
+- We do not partner with or operate as a licensed sportsbook.
+- Odds are displayed solely to help users evaluate the collectible card market — for example, an MVP frontrunner's rookie cards may increase in value.
+- Odds data may be delayed, inaccurate, or unavailable at any time.
+- We make no representation that odds reflect actual betting lines or probabilities.
 
-To the maximum extent allowed by law, Card Shark and its operators are not liable for any indirect, incidental, or consequential damages arising from your use of the service. Our total liability is capped at the amount you paid us in the 12 months preceding the claim.
+If you choose to place wagers based on information you see on Card Shark, you do so entirely at your own risk and through third-party platforms that are not affiliated with or endorsed by Card Shark.
 
-## 10. Termination
+## 9. Data Sources
+
+We aggregate data from public APIs (eBay Browse API, eBay Finding API, Pokemon TCG API) and other publicly available sources. Data may be delayed, incomplete, or inaccurate. We make no warranty on data accuracy. Third-party data sources may change or become unavailable without notice, and we are not responsible for any disruption in data availability.
+
+## 10. Limitation of Liability
+
+To the maximum extent allowed by law, Card Shark LLC and its members, managers, officers, employees, and agents are not liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the service, including but not limited to losses from buying, selling, or holding sports cards or collectibles based on information provided by the service. Our total aggregate liability is capped at the amount you paid us in the 12 months preceding the claim.
+
+## 11. Dispute Resolution
+
+Any dispute arising out of or relating to these Terms or your use of the service shall be resolved by **binding arbitration** administered by the American Arbitration Association under its Consumer Arbitration Rules. The arbitration shall take place in Birmingham, Alabama. **You agree to waive any right to participate in a class action lawsuit or class-wide arbitration.** The arbitrator's decision shall be final and binding.
+
+Small claims court actions in Jefferson County, Alabama may be brought by either party without arbitration.
+
+## 12. Termination
 
 You can close your account anytime. We can terminate your access if you violate these Terms. On termination, your data may be deleted after 30 days.
 
-## 11. Changes
+## 13. Changes
 
 We may update these Terms. Material changes will be emailed to active subscribers at least 14 days in advance.
 
-## 12. Governing Law
+## 14. Governing Law
 
-These Terms are governed by the laws of [STATE OF INCORPORATION — TBD]. Disputes will be resolved in [COUNTY/STATE], or via binding arbitration at either party's election.
+These Terms are governed by the laws of the State of Delaware, without regard to its conflict of law principles.
 
-## 13. Contact
+## 15. Contact
 
 hello@cardsharkapp.com

@@ -1,10 +1,10 @@
 # Affiliate Disclosure
 
-**Last updated: April 13, 2026**
+**Last updated: April 22, 2026**
 
 ## The Plain Version
 
-When you click an eBay, PWCC, COMC, Fanatics Collect, Alt, or Goldin link on Card Shark and buy something, we may earn a small commission from that marketplace. You pay the same price either way — the commission comes out of the seller's side, not yours.
+When you click an eBay, TCGPlayer, PWCC, COMC, Fanatics Collect, Alt, or Goldin link on Card Shark and buy something, we may earn a small commission from that marketplace. You pay the same price either way — the commission comes out of the seller's side, not yours.
 
 This is how Card Shark stays affordable. A portion of our revenue comes from these commissions; the rest comes from Pro subscriptions.
 
@@ -13,6 +13,8 @@ This is how Card Shark stays affordable. A portion of our revenue comes from the
 In accordance with the U.S. Federal Trade Commission's 16 CFR Part 255, Card Shark discloses that:
 
 - We participate in the **eBay Partner Network** affiliate program. Links to eBay listings on Card Shark contain tracking parameters that attribute referred purchases to us. We earn a commission — typically 1-4% of the sale price — on qualifying purchases within 24 hours of your click.
+
+- We participate in the **TCGPlayer** affiliate program through Impact.com. We earn a commission — typically 3.5% — on qualifying purchases made through our links.
 
 - We also participate in affiliate programs with **PWCC Marketplace**, **COMC**, **Fanatics Collect**, **Alt**, and **Goldin Auctions** when available. Terms vary by program.
 
