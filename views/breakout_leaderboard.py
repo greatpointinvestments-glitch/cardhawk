@@ -22,6 +22,72 @@ BREAKOUT_WATCHLISTS = {
 }
 
 
+def _render_deep_dive(selected: str, breakout_sport: str, breakout_watchlist: list, demo_mode: bool = False):
+    """Render the Deep Dive analysis for a selected player inline."""
+    player_data = next((p for p in breakout_watchlist if p["name"] == selected), None)
+    if not player_data:
+        return
+
+    info_cols = st.columns(4)
+    info_cols[0].metric("Team", player_data["team"])
+    info_cols[1].metric("Age", player_data["age"])
+    info_cols[2].metric("Draft Pick", f"#{player_data.get('draft_pick', 'N/A')}")
+    info_cols[3].metric("Seasons", player_data.get("seasons", "?"))
+
+    with st.spinner("Fetching live stats..."):
+        api_players = search_players(selected, breakout_sport)
+
+    if api_players:
+        p = api_players[0]
+        info = format_player_info(p, breakout_sport)
+        stats = get_multi_season_stats(info["id"], breakout_sport, num_seasons=3)
+
+        if stats:
+            st.markdown("**Season Stats:**")
+            stat_labels = SPORTS.get(breakout_sport, {}).get("stat_labels", {})
+            rows = []
+            for s in stats:
+                row = {"Season": s.get("season", "?")}
+                for key in SPORTS.get(breakout_sport, {}).get("key_stats", []):
+                    val = s.get(key)
+                    if val is not None:
+                        row[stat_labels.get(key, key)] = val
+                rows.append(row)
+            if rows:
+                render_table(rows)
+
+    with st.spinner("Checking eBay market..."):
+        listings = search_ebay_cards(selected, breakout_sport, "Rookie", limit=20)
+        listings = flag_deals(listings)
+
+    if listings:
+        prices = [l["total"] for l in listings if l["total"] > 0
+                  and not (l.get("buying_format") == "Auction" and l.get("bid_count", 0) == 0)]
+        if prices:
+            demo_tag = " (Sample)" if demo_mode else ""
+            st.markdown(f"**eBay Market{demo_tag}:** {len(listings)} rookie card listings | Median: ${sorted(prices)[len(prices)//2]:.2f}")
+
+            deal_count = sum(1 for l in listings if l.get("is_deal"))
+            if deal_count:
+                st.success(f"Found {deal_count} deals below median!")
+
+            for listing in listings[:10]:
+                render_listing_compact(listing)
+
+        with st.spinner("Fetching sold data..."):
+            sold = search_ebay_sold(selected, breakout_sport, "Rookie", limit=20)
+        if sold:
+            summary = get_market_summary(listings, sold)
+            demo_tag = " (Sample)" if demo_mode else ""
+            st.markdown(f"**Sold Market{demo_tag}:**")
+            sm1, sm2, sm3 = st.columns(3)
+            sm1.metric("Avg Sold Price", f"${summary['avg_sold']:.2f}")
+            sm2.metric("90d Volume", f"{summary['sold_volume']} sales")
+            sm3.metric("Price Trend", summary["price_trend"], f"{summary['trend_delta']:+.1f}%")
+    else:
+        st.info("No listings found for this player.")
+
+
 def render(demo_mode: bool = False):
     st.title("🚀 Breakout Leaderboard")
     st.caption("Find tomorrow's stars before everyone else")
@@ -64,6 +130,9 @@ def render(demo_mode: bool = False):
     with st.spinner("Loading market trends..."):
         trends = get_leaderboard_trends(player_names_tuple, breakout_sport)
 
+    # Track which player is expanded
+    expanded_player = st.session_state.get("bl_expanded")
+
     hdr = st.columns([0.5, 2.5, 1.5, 1, 1, 1, 1.5, 1.5])
     hdr[0].caption("Rank")
     hdr[1].caption("Player")
@@ -79,11 +148,14 @@ def render(demo_mode: bool = False):
         with cols[0]:
             st.write(f"**#{player['rank']}**")
         with cols[1]:
-            if st.button(player["name"], key=f"bl_{player['name']}_{player['rank']}",
+            _is_expanded = expanded_player == player["name"]
+            _btn_label = f"{'▼' if _is_expanded else '▶'} {player['name']}"
+            if st.button(_btn_label, key=f"bl_{player['name']}_{player['rank']}",
                          use_container_width=True):
-                st.session_state.prefill_player = player["name"]
-                st.session_state.prefill_sport = breakout_sport
-                st.session_state.nav_target = "🔍 Player Search"
+                if _is_expanded:
+                    st.session_state["bl_expanded"] = None
+                else:
+                    st.session_state["bl_expanded"] = player["name"]
                 st.rerun()
         with cols[2]:
             st.write(player["team"])
@@ -103,6 +175,12 @@ def render(demo_mode: bool = False):
                 st.markdown(trend_indicator(t_data["trend"], t_data["delta"]), unsafe_allow_html=True)
             else:
                 st.markdown('<span style="color:#6b7280">—</span>', unsafe_allow_html=True)
+
+        # Inline Deep Dive expander
+        if expanded_player == player["name"]:
+            st.markdown("---")
+            _render_deep_dive(player["name"], breakout_sport, breakout_watchlist, demo_mode)
+            st.markdown("---")
 
     # Blurred teaser rows + upgrade CTA
     if _show_leaderboard_upsell:
@@ -143,75 +221,3 @@ def render(demo_mode: bool = False):
 
 **Score** (0-100) blends: stat trajectory (30%), usage/role (20%), age (15%), draft position (15%), market pricing (20%).
         """)
-
-    gradient_divider()
-
-    # Deep dive
-    st.markdown("### Deep Dive")
-    player_names = [p["name"] for p in leaderboard]
-    selected = st.selectbox("Select a player for detailed analysis", player_names)
-
-    if selected:
-        st.markdown(f"#### {selected}")
-        player_data = next(p for p in breakout_watchlist if p["name"] == selected)
-
-        info_cols = st.columns(4)
-        info_cols[0].metric("Team", player_data["team"])
-        info_cols[1].metric("Age", player_data["age"])
-        info_cols[2].metric("Draft Pick", f"#{player_data.get('draft_pick', 'N/A')}")
-        info_cols[3].metric("Seasons", player_data.get("seasons", "?"))
-
-        with st.spinner("Fetching live stats..."):
-            api_players = search_players(selected, breakout_sport)
-
-        if api_players:
-            p = api_players[0]
-            info = format_player_info(p, breakout_sport)
-            stats = get_multi_season_stats(info["id"], breakout_sport, num_seasons=3)
-
-            if stats:
-                st.markdown("**Season Stats:**")
-                stat_labels = SPORTS.get(breakout_sport, {}).get("stat_labels", {})
-                rows = []
-                for s in stats:
-                    row = {"Season": s.get("season", "?")}
-                    for key in SPORTS.get(breakout_sport, {}).get("key_stats", []):
-                        val = s.get(key)
-                        if val is not None:
-                            row[stat_labels.get(key, key)] = val
-                    rows.append(row)
-                if rows:
-                    render_table(rows)
-
-        with st.spinner("Checking eBay market..."):
-            listings = search_ebay_cards(selected, breakout_sport, "Rookie", limit=20)
-            listings = flag_deals(listings)
-
-        if listings:
-            prices = [l["total"] for l in listings if l["total"] > 0
-                      and not (l.get("buying_format") == "Auction" and l.get("bid_count", 0) == 0)]
-            if prices:
-                demo_tag = " (Sample)" if demo_mode else ""
-                st.markdown(f"**eBay Market{demo_tag}:** {len(listings)} rookie card listings | Median: ${sorted(prices)[len(prices)//2]:.2f}")
-
-                deal_count = sum(1 for l in listings if l.get("is_deal"))
-                if deal_count:
-                    st.success(f"Found {deal_count} deals below median!")
-
-                for listing in listings[:10]:
-                    render_listing_compact(listing)
-
-            with st.spinner("Fetching sold data..."):
-                sold = search_ebay_sold(selected, breakout_sport, "Rookie", limit=20)
-            if sold:
-                summary = get_market_summary(listings, sold)
-                demo_tag = " (Sample)" if demo_mode else ""
-                st.markdown(f"**Sold Market{demo_tag}:**")
-                sm1, sm2, sm3 = st.columns(3)
-                sm1.metric("Avg Sold Price", f"${summary['avg_sold']:.2f}")
-                sm2.metric("90d Volume", f"{summary['sold_volume']} sales")
-                sm3.metric("Price Trend", summary["price_trend"], f"{summary['trend_delta']:+.1f}%")
-        else:
-            st.info("No listings found for this player.")
-
-
