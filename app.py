@@ -119,12 +119,7 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
     }
 
-    /* Feature card hover — border glow */
-    .feature-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-        border-color: rgba(245, 158, 11, 0.4) !important;
-    }
+    /* Feature card hover — border glow (duplicated in main block for specificity) */
 
     /* Consistent spacing */
     .gradient-divider { margin: 28px 0; }
@@ -245,18 +240,29 @@ st.markdown("""
         font-size: 0.7em; margin-right: 4px; vertical-align: middle;
     }
 
-    /* Homepage feature cards */
+    /* Homepage feature cards — clickable navigation */
     .feature-card {
         border: 1px solid #3b4560; border-radius: 12px;
         padding: 24px 20px; text-align: center; min-height: 150px;
         transition: transform 0.2s, box-shadow 0.2s;
     }
+    .feature-card[data-nav-card] { cursor: pointer; }
     .feature-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        border-color: rgba(245, 158, 11, 0.4) !important;
     }
     .feature-card h3 { margin: 8px 0 4px 0; font-size: 1.2em; }
     .feature-card p { color: #9ca3af; font-size: 0.9em; }
+
+    /* Hide the small buttons below nav cards — cards themselves are clickable */
+    .feature-card[data-nav-card] ~ .stButton,
+    [data-testid="stMarkdown"]:has(.feature-card[data-nav-card]) + [data-testid="stElementToolbar"] + div .stButton,
+    [data-testid="stMarkdown"]:has(.feature-card[data-nav-card]) + div:has(.stButton) {
+        height: 0 !important; overflow: hidden !important;
+        margin: 0 !important; padding: 0 !important;
+    }
+
     .feature-card-search { background: linear-gradient(135deg, #064e3b, #065f46); }
     .feature-card-breakout { background: linear-gradient(135deg, #7c2d12, #9a3412); }
     .feature-card-legends { background: linear-gradient(135deg, #713f12, #854d0e); }
