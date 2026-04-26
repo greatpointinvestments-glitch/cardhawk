@@ -37,9 +37,14 @@ def get_leaderboard_trends(player_names: tuple, sport: str, max_players: int = 1
             else:
                 trend = "Stable"
 
-            trends[name] = {"trend": trend, "delta": delta}
+            trends[name] = {
+                "trend": trend,
+                "delta": delta,
+                "avg_sold": summary.get("avg_sold", 0),
+                "avg_active": summary.get("avg_active", 0),
+            }
         except Exception:
-            trends[name] = {"trend": "Stable", "delta": 0.0}
+            trends[name] = {"trend": "Stable", "delta": 0.0, "avg_sold": 0, "avg_active": 0}
 
     return trends
 

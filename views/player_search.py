@@ -335,6 +335,13 @@ def _render_sports_results(player_query: str, sport: str, demo_mode: bool):
             st.success(f"Showing {len(filtered)} of {total_count} listings{demo_tag} — deals flagged below median ({median_str})")
         else:
             st.success(f"Found {total_count} listings{demo_tag} — deals flagged below median ({median_str})")
+        hdr = st.columns([0.5, 3, 1, 1, 1, 1])
+        hdr[0].caption("")
+        hdr[1].caption("Card")
+        hdr[2].caption("Price")
+        hdr[3].caption("Shipping")
+        hdr[4].caption("Total")
+        hdr[5].caption("")
         for listing in filtered:
             render_listing_row(listing)
     else:

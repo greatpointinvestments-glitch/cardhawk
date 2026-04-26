@@ -11,6 +11,7 @@ from tiers import check_usage_limit, increment_and_check, render_limit_warning, 
 def _set_budget(amt: float):
     """Callback for quick-pick budget buttons."""
     st.session_state["bf_budget"] = amt
+    st.session_state["_bf_budget_changed"] = True
 
 
 def render(demo_mode: bool = False):
@@ -41,6 +42,10 @@ def render(demo_mode: bool = False):
             st.button(f"${amt}", key=f"qb_{amt}", use_container_width=True,
                       on_click=_set_budget, args=(float(amt),))
 
+    # Rerun if budget button was clicked
+    if st.session_state.pop("_bf_budget_changed", False):
+        st.rerun()
+
     # Fuzzy search suggestions
     if player_name:
         _bf_suggestion = render_fuzzy_suggestions(player_name, sport, key_prefix="bf_fz")
@@ -65,6 +70,10 @@ def render(demo_mode: bool = False):
         affordable.sort(key=lambda c: get_pokemon_market_price(c))
         if affordable:
             st.success(f"Found {len(affordable)} card{'s' if len(affordable) != 1 else ''} under ${budget:.0f} for {player_name}")
+            phdr = st.columns([0.8, 3, 1.2])
+            phdr[0].caption("")
+            phdr[1].caption("Card")
+            phdr[2].caption("Price")
             for card in affordable:
                 price = get_pokemon_market_price(card)
                 c1, c2, c3 = st.columns([0.8, 3, 1.2])
@@ -94,6 +103,13 @@ def render(demo_mode: bool = False):
 
         if affordable:
             st.success(f"Found {len(affordable)} card{'s' if len(affordable) != 1 else ''} under ${budget:.0f} for {player_name}")
+            hdr = st.columns([0.5, 3, 1, 1, 1, 1])
+            hdr[0].caption("")
+            hdr[1].caption("Card")
+            hdr[2].caption("Price")
+            hdr[3].caption("Shipping")
+            hdr[4].caption("Total")
+            hdr[5].caption("")
             for listing in affordable:
                 render_listing_row(listing)
         else:

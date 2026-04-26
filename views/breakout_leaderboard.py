@@ -151,7 +151,7 @@ def render(demo_mode: bool = False):
     # Track which player is expanded
     expanded_player = st.session_state.get("bl_expanded")
 
-    hdr = st.columns([0.5, 2.5, 1, 1.5, 1, 1, 1, 1.5])
+    hdr = st.columns([0.5, 2, 0.8, 1.2, 0.8, 0.8, 0.8, 1, 1, 1.2])
     hdr[0].caption("Rank")
     hdr[1].caption("Player")
     hdr[2].caption("Sport")
@@ -159,10 +159,12 @@ def render(demo_mode: bool = False):
     hdr[4].caption("Age")
     hdr[5].caption("Score")
     hdr[6].caption("Signal")
-    hdr[7].caption("Price Trend")
+    hdr[7].caption("Avg Price")
+    hdr[8].caption("Avg Sold")
+    hdr[9].caption("Trend")
 
     for player in filtered:
-        cols = st.columns([0.5, 2.5, 1, 1.5, 1, 1, 1, 1.5])
+        cols = st.columns([0.5, 2, 0.8, 1.2, 0.8, 0.8, 0.8, 1, 1, 1.2])
         with cols[0]:
             st.write(f"**#{player['rank']}**")
         with cols[1]:
@@ -186,8 +188,18 @@ def render(demo_mode: bool = False):
             st.markdown(score_progress_bar(player['score']), unsafe_allow_html=True)
         with cols[6]:
             st.markdown(signal_badge(player["signal"]), unsafe_allow_html=True)
+        t_data = trends.get(player["name"])
         with cols[7]:
-            t_data = trends.get(player["name"])
+            if t_data and t_data.get("avg_active", 0) > 0:
+                st.write(f"${t_data['avg_active']:.2f}")
+            else:
+                st.write("—")
+        with cols[8]:
+            if t_data and t_data.get("avg_sold", 0) > 0:
+                st.write(f"${t_data['avg_sold']:.2f}")
+            else:
+                st.write("—")
+        with cols[9]:
             if t_data:
                 st.markdown(trend_indicator(t_data["trend"], t_data["delta"]), unsafe_allow_html=True)
             else:
