@@ -220,13 +220,24 @@ def marketplace_name(url: str) -> str:
     return MARKETPLACE_NAMES.get(detect_marketplace(url), "Marketplace")
 
 
-def ebay_search_affiliate_url(player_name: str, sport: str = "", card_type: str = "") -> str:
+def ebay_search_affiliate_url(
+    player_name: str,
+    sport: str = "",
+    card_type: str = "",
+    year: str = "",
+    set_name: str = "",
+) -> str:
     """Generate an eBay search URL for a player's cards, wrapped with affiliate params.
-    Use this on pages that show player data but don't have specific listing URLs."""
+    Use this on pages that show player data but don't have specific listing URLs.
+    Pass year/set_name for more specific searches (e.g. '2023-24', 'Prizm Silver')."""
     from urllib.parse import quote_plus
     query_parts = [player_name]
     if sport:
         query_parts.append(sport)
+    if year:
+        query_parts.append(year)
+    if set_name:
+        query_parts.append(set_name)
     if card_type and card_type != "Any":
         query_parts.append(card_type)
     query_parts.append("card")

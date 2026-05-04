@@ -87,8 +87,8 @@ def render():
                 change_color = "normal" if stats["change_pct"] >= 0 else "inverse"
                 ps4.metric("Change", f"{stats['change_pct']:+.1f}%", delta_color=change_color)
 
-            # Affiliate link to current listings
-            buy_url = ebay_search_affiliate_url(ph_player, ph_sport, ph_type)
+            # Affiliate link to current listings — include year/set for specific searches
+            buy_url = ebay_search_affiliate_url(ph_player, ph_sport, ph_type, year=ph_year.strip(), set_name=ph_set.strip())
             st.markdown(
                 f'<a href="{buy_url}" target="_blank" class="ebay-btn" '
                 f'style="display:inline-block;margin-top:10px;padding:8px 20px;">'

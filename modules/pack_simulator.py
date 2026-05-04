@@ -15,9 +15,9 @@ from data.watchlists import (
 
 
 _PLAYER_POOLS = {
-    "NBA": NBA_BREAKOUT_WATCHLIST + [p for p in LEGENDS_WATCHLIST if "Basketball" in p.get("sport_display", "Basketball")],
-    "NFL": NFL_BREAKOUT_WATCHLIST,
-    "MLB": MLB_BREAKOUT_WATCHLIST,
+    "NBA": NBA_BREAKOUT_WATCHLIST + [p for p in LEGENDS_WATCHLIST if p.get("sport") == "NBA"],
+    "NFL": NFL_BREAKOUT_WATCHLIST + [p for p in LEGENDS_WATCHLIST if p.get("sport") == "NFL"],
+    "MLB": MLB_BREAKOUT_WATCHLIST + [p for p in LEGENDS_WATCHLIST if p.get("sport") == "MLB"],
     "Pokemon": POKEMON_LEGENDS_WATCHLIST,
 }
 

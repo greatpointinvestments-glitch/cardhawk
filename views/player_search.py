@@ -341,7 +341,7 @@ def _render_sports_results(player_query: str, sport: str, demo_mode: bool):
         hdr[2].caption("Price")
         hdr[3].caption("Shipping")
         hdr[4].caption("Total")
-        hdr[5].caption("")
+        hdr[5].caption("Link")
         for listing in filtered:
             render_listing_row(listing)
     else:

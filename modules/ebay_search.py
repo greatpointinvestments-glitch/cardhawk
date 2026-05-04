@@ -100,6 +100,7 @@ def search_ebay_cards(
     limit: int = 50,
     year: str | None = None,
     set_name: str | None = None,
+    max_price: float | None = None,
 ) -> list[dict]:
     """Search eBay for sports card listings. Falls back to demo data if API keys not set."""
     if not player_name or not player_name.strip():
@@ -128,9 +129,14 @@ def search_ebay_cards(
     # eBay Browse API: omit sort for default "best match" relevance ranking
     if sort and sort != "bestMatch":
         params["sort"] = sort
-    # When sorting by ending soonest, filter to auction listings only
+    # Build filters
+    filters = []
     if sort == "endingSoonest":
-        params["filter"] = "buyingOptions:{AUCTION}"
+        filters.append("buyingOptions:{AUCTION}")
+    if max_price is not None and max_price > 0:
+        filters.append(f"price:[..{max_price:.2f}],priceCurrency:USD")
+    if filters:
+        params["filter"] = ",".join(filters)
 
     try:
         resp = requests.get(

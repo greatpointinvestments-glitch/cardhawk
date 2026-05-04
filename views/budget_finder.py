@@ -90,7 +90,7 @@ def render(demo_mode: bool = False):
             st.warning(f"No Pokemon cards found under ${budget:.0f} for {player_name}. Try a higher budget.")
     else:
         with st.spinner(f"Finding cards for {player_name} under ${budget:.0f}..."):
-            listings = search_ebay_cards(player_name, sport, "Any", sort="price")
+            listings = search_ebay_cards(player_name, sport, "Any", sort="bestMatch", max_price=budget)
             listings = flag_deals(listings)
 
         increment_and_check("searches")

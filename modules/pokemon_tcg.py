@@ -157,7 +157,7 @@ def _parse_card(card: dict) -> dict:
     tcgp = card.get("tcgplayer", {})
     tcgp_prices = tcgp.get("prices", {})
 
-    return {
+    parsed = {
         "id": card.get("id", ""),
         "name": card.get("name", ""),
         "supertype": card.get("supertype", ""),  # Pokemon, Trainer, Energy
@@ -179,6 +179,8 @@ def _parse_card(card: dict) -> dict:
         "tcgplayer_url": tcgp.get("url", ""),
         "tcgplayer_updated": tcgp.get("updatedAt", ""),
         "tcgplayer_prices": tcgp_prices,
-        # Convenience: best market price
-        "market_price": 0.0,  # filled below
+        # Convenience: best market price (filled below)
+        "market_price": 0.0,
     }
+    parsed["market_price"] = get_pokemon_market_price(parsed)
+    return parsed
